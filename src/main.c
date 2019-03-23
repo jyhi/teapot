@@ -1,10 +1,6 @@
-#include <glib.h>
-#include "util.h"
-#include "config.h"
+#include "server.h"
 
 int main(int argc, char **argv)
 {
-  g_message("%s %s starting", TEAPOT_NAME, TEAPOT_VERSION);
-
-  return 0;
+  return teapot_run(argc, argv);
 }
