@@ -2,11 +2,13 @@
 #include <glib.h>
 #include "config.h"
 
+// Ports to bind on
+static int http_port  = TEAPOT_DEFAULT_HTTP_PORT;
+static int https_port = TEAPOT_DEFAULT_HTTPS_PORT;
+
 int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer data)
 {
   (void) data;
-  int http_port  = TEAPOT_DEFAULT_HTTP_PORT;
-  int https_port = TEAPOT_DEFAULT_HTTPS_PORT;
 
   if (g_variant_dict_contains(opts, "version")) {
     puts(TEAPOT_NAME " " TEAPOT_VERSION);
