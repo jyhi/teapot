@@ -69,5 +69,10 @@ int teapot_run(int argc, char **argv)
   g_signal_connect(app, "activate", G_CALLBACK(teapot_activate), NULL);
 
   // Nike
-  return g_application_run(app, argc, argv);
+  int ret = g_application_run(app, argc, argv);
+
+  // Free unused memory
+  g_clear_object(&app);
+
+  return ret;
 }
