@@ -3,25 +3,43 @@
 #include "config.h"
 
 // Ports to bind on
-static int http_port  = TEAPOT_DEFAULT_HTTP_PORT;
-static int https_port = TEAPOT_DEFAULT_HTTPS_PORT;
+static guint16 http_port  = TEAPOT_DEFAULT_HTTP_PORT;
+static guint16 https_port = TEAPOT_DEFAULT_HTTPS_PORT;
 
 int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer data)
 {
   (void) data;
+  gint32 temp_port = 0;
 
   if (g_variant_dict_contains(opts, "version")) {
     puts(TEAPOT_NAME " " TEAPOT_VERSION);
     return 0; // no future action is needed, exit
   }
 
-  if (g_variant_dict_lookup(opts, "http-port", "i", &http_port)) {
-    g_debug("HTTP port set to %d", http_port);
+  if (g_variant_dict_lookup(opts, "http-port", "i", &temp_port)) {
+    // Port number is actually from 1 to 65535
+    if (temp_port < 1 || temp_port > G_MAXUINT16) {
+      g_printerr("Port number should range from 1 to 65535.\n");
+      return 1;
+    }
+
+    http_port = CLAMP(temp_port, 1, G_MAXUINT16);
   }
 
-  if (g_variant_dict_lookup(opts, "https-port", "i", &https_port)) {
-    g_debug("HTTPS port set to %d", https_port);
+  if (g_variant_dict_lookup(opts, "https-port", "i", &temp_port)) {
+    // Port number is actually from 1 to 65535
+    if (temp_port < 1 || temp_port > 65535) {
+      g_printerr("Port number should range from 1 to 65535.\n");
+      return 1;
+    }
+
+    https_port = CLAMP(temp_port, 1, G_MAXUINT16);
   }
+
+  // BUG: 0 is not catched by the command line argument parser, so setting a
+  // port to 0 will fall directly to the default ones. I don't know why.
+  g_debug("HTTP port set to %d%s", http_port, http_port == TEAPOT_DEFAULT_HTTP_PORT ? " (default)" : "");
+  g_debug("HTTPS port set to %d%s", https_port, https_port == TEAPOT_DEFAULT_HTTPS_PORT ? " (default)" : "");
 
   // A negative exit code let GApplication continue to run
   return -1;
