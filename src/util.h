@@ -1,6 +1,8 @@
 #ifndef TEAPOT_UTIL_H
 #define TEAPOT_UTIL_H
 
+#include <glib.h>
+
 /**
  * Add position information to debugging outputs
  */
