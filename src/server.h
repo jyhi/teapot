@@ -5,31 +5,6 @@
 #include <glib.h>
 
 /**
- * Handle options passed to Teapot.
- *
- * This function is designed to be used with the "handle-local-option" signal
- * emitted by GApplication.
- *
- * @param app  [in] The GApplication.
- * @param opts [in] Options passed to the program.
- * @param data [in] Optional user data. No use.
- * @return A return value indicating the next step to go. Refer to documentation
- *         of GApplication for details.
- */
-int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer data);
-
-/**
- * Application entry of Teapot for GApplication.
- *
- * This function is designed to be used with the "activate" signal emitted by
- * GApplication.
- *
- * @param app  [in] The GApplication.
- * @param data [in] Optional user data. No use.
- */
-void teapot_activate(GApplication *app, gpointer data);
-
-/**
  * Run Teapot.
  *
  * This function is designed to be chained in the main() function with `return`
