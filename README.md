@@ -8,7 +8,7 @@ Teapot is a simple HTTP server implemented in C.
 make
 ```
 
-The result binary will be in the current directory.
+The result binary will be in the current directory. The build system does not support shadow build.
 
 ## Usage
 
