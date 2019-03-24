@@ -2,6 +2,8 @@
 
 Teapot is a simple HTTP server implemented in C.
 
+Disclaimer: This is a course project, and is far from finish. Do not use Teapot in serious scenario unless you know what you are doing.
+
 ## Build
 
 ```shell
