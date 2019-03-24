@@ -19,7 +19,10 @@ The result binary will be in the current directory.
 
 This program depends on:
 
-- GLib
+- GIO (`gio-2.0`)
+- GLib (`glib-2.0`)
+
+The build system also uses `pkg-config` to discover dependencies.
 
 ## License
 
