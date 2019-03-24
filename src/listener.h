@@ -10,6 +10,19 @@ struct TeapotBindings {
   guint16 https_port; ///< HTTPS binding port of Teapot
 };
 
-gpointer teapot_listener(gpointer data);
+/**
+ * The Teapot listener, who binds Teapot on an address and listen to two ports
+ * for HTTP and HTTPS service respectively.
+ *
+ * This function is designed to be used with GThread to spawn (GThreadFunc):
+ *
+ * ```c
+ * gpointer teapot_listener(gpointer data);
+ * ```
+ *
+ * @param bindings [in] Binding information packed into struct TeapotBindings
+ * @return Something.
+ */
+void *teapot_listener(const struct TeapotBindings *bindings);
 
 #endif

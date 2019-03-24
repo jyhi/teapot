@@ -66,7 +66,7 @@ static void teapot_activate(GApplication *app, gpointer data)
   g_application_hold(app);
 
   // Spawn listener
-  g_thread_unref(g_thread_new("listener", teapot_listener, &bindings));
+  g_thread_unref(g_thread_new("listener", (GThreadFunc)teapot_listener, &bindings));
 
   // This handler will return, but since we've increased the refcount of app,
   // GApplication will keep running.
