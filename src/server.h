@@ -1,29 +1,28 @@
 #ifndef TEAPOT_SERVER_H
 #define TEAPOT_SERVER_H
 
-#include <gio/gio.h>
-#include <glib.h>
+/**
+ * Binding information packed together.
+ */
+struct TeapotBindings {
+  gchar  *address;    ///< Binding address of Teapot
+  guint16 http_port;  ///< HTTP binding port of Teapot
+  guint16 https_port; ///< HTTPS binding port of Teapot
+};
 
 /**
- * Run Teapot.
+ * The Teapot listener, who binds Teapot on an address and listen to two ports
+ * for HTTP and HTTPS service respectively.
  *
- * This function is designed to be chained in the main() function with `return`
- * statement:
+ * This function is designed to be used with GThread to spawn (GThreadFunc):
  *
  * ```c
- * int main(int argc, char **argv) {
- *   return teapot_run(argc, argv);
- * }
+ * gpointer teapot_listener(gpointer data);
  * ```
  *
- * This function will create a GApplication, register signals and options, and
- * run `g_application_run()` on it. Upon return from `g_application_run()`, the
- * return value is returned to the caller of `teapot_run()` too.
- *
- * @param argc [in] Argument count, from `main()`.
- * @param argv [in] Argument content, from `main()`.
- * @return Status code indicating the program's exit state.
+ * @param bindings [in] Binding information packed into struct TeapotBindings
+ * @return Something.
  */
-int teapot_run(int argc, char **argv);
+void *teapot_listener(const struct TeapotBindings *bindings);
 
 #endif

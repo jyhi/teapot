@@ -2,7 +2,7 @@
 CFLAGS += $(shell pkg-config --cflags glib-2.0 gio-2.0)
 
 # Object files to be compiled (in .o suffix, not .c)
-OBJS = listener.o server.o main.o
+OBJS = server.o app.o main.o
 
 .PHONY: all clean
 
