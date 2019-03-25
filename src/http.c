@@ -64,7 +64,7 @@ struct HttpRequest {
 struct HttpResponse {
   // Status line
   char *version;
-  enum HttpStatusCode;
+  enum HttpStatusCode status_code;
 
   // Header fields
   char *content_type;
