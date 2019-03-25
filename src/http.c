@@ -139,7 +139,7 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
 
 /********** Public APIs **********/
 
-char *teapot_http_process(const char *input)
+char *teapot_http_process(size_t *size, const char *input)
 {
   // unimplemented
 }
