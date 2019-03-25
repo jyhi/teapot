@@ -60,6 +60,7 @@ struct TeapotFile *teapot_file_read(const char *path)
     g_warning("Failed to query file info: %s", error->message);
     g_clear_error(&error);
     g_clear_object(&file);
+    g_free(abspath);
     return NULL;
   }
 
@@ -79,6 +80,7 @@ struct TeapotFile *teapot_file_read(const char *path)
     teapot_file_free(ret);
     g_clear_object(&info);
     g_clear_object(&file);
+    g_free(abspath);
     return NULL;
   }
 
@@ -87,6 +89,7 @@ struct TeapotFile *teapot_file_read(const char *path)
   // Free unused memory
   g_clear_object(&info);
   g_clear_object(&file);
+  g_free(abspath);
 
   return ret;
 }
