@@ -9,22 +9,39 @@
 #include <stdint.h>
 
 /**
- * Read a file from the disk.
- *
- * @param output [out] The NUL-terminated content of the specified file.
- * @param filename [in] Name of the file to read.
- * @return true on success, false on failure.
+ * A data structure representing a file loaded into the memory.
  */
-bool teapot_file_read(uint8_t *output, const char *filename);
+struct TeapotFile {
+  char    *filename;     ///< Name of the file
+  char    *content_type; ///< MIME type of the file
+  size_t   size;         ///< Size of the file
+  uint8_t *content;      ///< Binary content of the file
+};
 
 /**
- * Write a file from the disk.
+ * Free the memory occupied by `struct TeapotFile`.
  *
- * @param filename [in] Name of the file to read.
- * @param input    [in] The content of the specified file.
- * @param size     [in] The size of the content.
+ * @param file [in] The `struct TeapotFile` to free.
+ */
+void teapot_file_free(struct TeapotFile *file);
+
+/**
+ * Read file from path.
+ *
+ * @param path [in]  Path to the file to load.
+ * @return A `struct TeapotFile` representing the file. On failure, NULL is
+ *         returned.
+ */
+struct TeapotFile teapot_file_read(const char *path);
+
+/**
+ * Write file to path.
+ *
+ * @param content [in] Binary content of the file.
+ * @param size    [in] Size of the file.
+ * @param path    [in] Path to the file to write.
  * @return true on success, false on failure.
  */
-bool teapot_file_write(const char *filename, uint8_t *input, size_t size);
+bool teapot_file_write(const uint8_t *content, const size_t size, const char *path);
 
 #endif

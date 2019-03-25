@@ -1,20 +1,17 @@
-#ifndef __cplusplus
-#include <stdbool.h>
-#endif
-
-#include <stdint.h>
 #include <glib.h>
+#include "file.h"
 
-bool teapot_file_read(uint8_t *output, const char *filename)
+void teapot_file_free(struct TeapotFile *file)
 {
   // unimplemented
-
-  return false;
 }
 
-bool teapot_file_write(const char *filename, uint8_t *input, size_t size)
+struct TeapotFile teapot_file_read(const char *path)
 {
   // unimplemented
+}
 
-  return false;
+bool teapot_file_write(const uint8_t *content, const size_t size, const char *path)
+{
+  // unimplemented
 }
