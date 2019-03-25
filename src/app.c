@@ -4,10 +4,18 @@
 #include "server.h"
 #include "config.h"
 
-// Address and ports to bind on (addresses will be set later)
-static gchar *address = TEAPOT_DEFAULT_BIND_ADDRESS;
-static struct TeapotBinding http_binding  = {NULL, TEAPOT_DEFAULT_HTTP_PORT};
-static struct TeapotBinding https_binding = {NULL, TEAPOT_DEFAULT_HTTPS_PORT};
+// Address and ports to bind on
+static struct TeapotHttpBinding http_binding = {
+  TEAPOT_DEFAULT_BIND_ADDRESS,
+  TEAPOT_DEFAULT_HTTP_PORT,
+};
+
+static struct TeapotHttpsBinding https_binding = {
+  TEAPOT_DEFAULT_BIND_ADDRESS,
+  TEAPOT_DEFAULT_HTTPS_PORT,
+  TEAPOT_DEFAULT_TLS_CERTIFICATE_PATH,
+  TEAPOT_DEFAULT_TLS_PRIVATE_KEY_PATH,
+};
 
 /********** Private APIs **********/
 
@@ -15,6 +23,7 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
 {
   (void) app;
   (void) data;
+  gchar *temp_str  = NULL;
   gint32 temp_port = 0;
 
   if (g_variant_dict_contains(opts, "version")) {
@@ -22,9 +31,21 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
     return 0; // no future action is needed, exit
   }
 
-  g_variant_dict_lookup(opts, "bind", "s", &address);
-  http_binding.address  = address;
-  https_binding.address = address;
+  if (g_variant_dict_lookup(opts, "bind", "s", &temp_str) && temp_str) {
+    http_binding.address  = g_strdup(temp_str);
+    https_binding.address = g_strdup(temp_str);
+    g_free(temp_str);
+  }
+
+  if (g_variant_dict_lookup(opts, "cert", "s", &temp_str) && temp_str) {
+    https_binding.cert_path = g_strdup(temp_str);
+    g_free(temp_str);
+  }
+
+  if (g_variant_dict_lookup(opts, "key", "s", &temp_str) && temp_str) {
+    https_binding.pkey_path = g_strdup(temp_str);
+    g_free(temp_str);
+  }
 
   if (g_variant_dict_lookup(opts, "http-port", "i", &temp_port)) {
     // Port number is actually from 1 to 65535
@@ -54,9 +75,10 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
 
   // BUG: 0 is not catched by the command line argument parser, so setting a
   // port to 0 will fall directly to the default ones. I don't know why.
-  g_debug("Binding address set to %s", address);
-  g_debug("HTTP port set to %d%s", http_binding.port, http_binding.port == TEAPOT_DEFAULT_HTTP_PORT ? " (default)" : "");
-  g_debug("HTTPS port set to %d%s", https_binding.port, https_binding.port == TEAPOT_DEFAULT_HTTPS_PORT ? " (default)" : "");
+  g_debug("HTTP binding set to %s:%d%s", http_binding.address, http_binding.port, http_binding.port == TEAPOT_DEFAULT_HTTP_PORT ? " (default)" : "");
+  g_debug("HTTPS binding set to %s:%d%s", https_binding.address, https_binding.port, https_binding.port == TEAPOT_DEFAULT_HTTPS_PORT ? " (default)" : "");
+  g_debug("TLS certificate path set to %s", https_binding.cert_path);
+  g_debug("TLS peivate key path set to %s", https_binding.pkey_path);
 
   // A negative exit code let GApplication continue to run
   return -1;
@@ -94,6 +116,8 @@ int teapot_run(int argc, char **argv)
   g_application_add_main_option(app, "bind", 'b', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, "Address to bind", "address");
   g_application_add_main_option(app, "http-port", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_INT, "Port to bind the HTTP service", "port");
   g_application_add_main_option(app, "https-port", 'P', G_OPTION_FLAG_NONE, G_OPTION_ARG_INT, "Port to bind the HTTPS service", "port");
+  g_application_add_main_option(app, "cert", 'c', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, "The TLS certificate to use", "path");
+  g_application_add_main_option(app, "key", 'k', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, "The TLS private key to use", "path");
   g_application_add_main_option(app, "version", 'v', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, "Show version string", NULL);
 
   // Register handlers to signals to support running of GApplication

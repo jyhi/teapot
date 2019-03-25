@@ -2,11 +2,21 @@
 #define TEAPOT_SERVER_H
 
 /**
- * Binding information packed together.
+ * Binding information for HTTP listener.
  */
-struct TeapotBinding {
+struct TeapotHttpBinding {
   gchar  *address; ///< Binding address of Teapot
   guint16 port;    ///< Binding port of Teapot
+};
+
+/**
+ * Binding information for HTTPS listener.
+ */
+struct TeapotHttpsBinding {
+  gchar  *address;   ///< Binding address of Teapot
+  guint16 port;      ///< Binding port of Teapot
+  gchar  *cert_path; ///< Path to TLS certificate file
+  gchar  *pkey_path; ///< Path to TLS private key file
 };
 
 /**
@@ -21,7 +31,7 @@ struct TeapotBinding {
  * @param bindings [in] Binding information packed into struct TeapotBinding.
  * @return Something.
  */
-void *teapot_http_listener(const struct TeapotBinding *binding);
+void *teapot_http_listener(const struct TeapotHttpBinding *binding);
 
 /**
  * The Teapot HTTPS listener.
@@ -35,6 +45,6 @@ void *teapot_http_listener(const struct TeapotBinding *binding);
  * @param bindings [in] Binding information packed into struct TeapotBinding.
  * @return Something.
  */
-void *teapot_https_listener(const struct TeapotBinding *binding);
+void *teapot_https_listener(const struct TeapotHttpsBinding *binding);
 
 #endif
