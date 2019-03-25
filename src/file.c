@@ -12,9 +12,20 @@ static struct TeapotFile *teapot_file_new(void)
 
 void teapot_file_free(struct TeapotFile *file)
 {
-  g_free(file->filename);
-  g_free(file->content_type);
-  g_free(file->content);
+  if (!file)
+    return;
+
+  g_debug("File: freeing %s of size %lu", file->filename, file->size);
+
+  if (file->filename)
+    g_free(file->filename);
+
+  if (file->content_type)
+    g_free(file->content_type);
+
+  if (file->content)
+    g_free(file->content);
+
   file->size = 0;
 }
 
