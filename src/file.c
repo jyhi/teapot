@@ -1,6 +1,15 @@
 #include <glib.h>
 #include "file.h"
 
+/********** Private APIs **********/
+
+static struct TeapotFile *teapot_file_new(void)
+{
+  return g_new0(struct TeapotFile, 1);
+}
+
+/********** Public APIs **********/
+
 void teapot_file_free(struct TeapotFile *file)
 {
   g_free(file->filename);
