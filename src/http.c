@@ -3,78 +3,89 @@
 #include <stdint.h>
 #include "file.h"
 
+#define BUFSIZE 1024
+
 /********** Internal types **********/
 
 /**
  * HTTP method in an HTTP request.
  */
 enum HttpMethod {
-  HTTP_METHOD_UNKNOWN, ///< Unknown verb, used to indicate a non-HTTP message
-  HTTP_GET,            ///< HTTP GET request
-  HTTP_HEAD,           ///< HTTP HEAD request
-  HTTP_POST,           ///< HTTP POST request
-  HTTP_DELETE,         ///< HTTP DELETE request
-
-  HTCPCP_BREW,         ///< HTCPCP BREW request (I'm a teapot!)
+    HTTP_METHOD_UNKNOWN, ///< Unknown verb, used to indicate a non-HTTP message
+    HTTP_GET,            ///< HTTP GET request
+    HTTP_HEAD,           ///< HTTP HEAD request
+    HTTP_POST,           ///< HTTP POST request
+    HTTP_DELETE,         ///< HTTP DELETE request
+    HTCPCP_BREW,         ///< HTCPCP BREW request (I'm a teapot!)
 };
 
 /**
  * HTTP status code in an HTTP response.
  */
 enum HttpStatusCode {
-  HTTP_STATUS_UNKNOWN,                ///< Unknown HTTP status code
-  HTTP_STATUS_OK,                     ///< HTTP 200
-  HTTP_STATUS_NO_CONTENT,             ///< HTTP 204
+    HTTP_STATUS_UNKNOWN,                ///< Unknown HTTP status code
+    HTTP_STATUS_OK,                     ///< HTTP 200
+    HTTP_STATUS_NO_CONTENT,             ///< HTTP 204
+    
+    HTTP_STATUS_MOVED_PERMANENTLY,      ///< HTTP 301
+    HTTP_STATUS_FOUND,                  ///< HTTP 302
+    
+    HTTP_STATUS_BAD_REQUEST,            ///< HTTP 400
+    HTTP_STATUS_FORBIDDEN,              ///< HTTP 403
+    HTTP_STATUS_NOT_FOUND,              ///< HTTP 404
+    HTTP_STATUS_METHOD_NOT_ALLOWED,     ///< HTTP 405
+    
+    HTTP_STATUS_INTERNAL_SERVER_ERROR,  ///< HTTP 500
+    
+    HTCPCP_STATUS_I_AM_A_TEAPOT,        ///< HTCPCP 418 :)
+};
 
-  HTTP_STATUS_MOVED_PERMANENTLY,      ///< HTTP 301
-  HTTP_STATUS_FOUND,                  ///< HTTP 302
-
-  HTTP_STATUS_BAD_REQUEST,            ///< HTTP 400
-  HTTP_STATUS_FORBIDDEN,              ///< HTTP 403
-  HTTP_STATUS_NOT_FOUND,              ///< HTTP 404
-  HTTP_STATUS_METHOD_NOT_ALLOWED,     ///< HTTP 405
-
-  HTTP_STATUS_INTERNAL_SERVER_ERROR,  ///< HTTP 500
-
-  HTCPCP_STATUS_I_AM_A_TEAPOT,        ///< HTCPCP 418 :)
+/**
+ * HTTP header indicator, mainly for use in http_extract_header().
+ */
+enum RequestHeader {
+  HTTP_HOST,                          ///< "Host: "
+  HTTP_CONTENT_TYPE,                  ///< "Content-Type: "
+  HTTP_HEADER_CONTENT_LENGTH,         ///< "Content-Length: "
+  HTTP_HEADER_EXPECT,                 ///< "Expect: "
 };
 
 /**
  * An HTTP request entity.
  */
 struct HttpRequest {
-  // Request line
-  enum HttpMethod method;
-  char *path;
-  char *version;
-
-  // Header fields
-  char *host;
-  char *content_type;
-  size_t content_length;
-  char *expect;
-
-  // Content
-  uint8_t *content;
+    // Request line
+    enum HttpMethod method;
+    char *path;
+    char *version;
+    
+    // Header fields
+    char *host;
+    char *content_type;
+    char *content_length;
+    char *expect;
+    
+    // Content
+    uint8_t *content;
 };
 
 /**
  * An HTTP response entity.
  */
 struct HttpResponse {
-  // Status line
-  char *version;
-  enum HttpStatusCode status_code;
-
-  // Header fields
-  char *content_type;
-  size_t content_length;
-  char *connection;
-  char *location;
-  char *allow;
-
-  // Content
-  uint8_t *content;
+    // Status line
+    char *version;
+    enum HttpStatusCode status_code;
+    
+    // Header fields
+    char *content_type;
+    size_t content_length;
+    char *connection;
+    char *location;
+    char *allow;
+    
+    // Content
+    uint8_t *content;
 };
 
 /********** Internal states (variables) **********/
@@ -106,12 +117,17 @@ static const char *http_status_method_not_allowed     = HTTP_VERSION " 405 Metho
 static const char *http_status_internal_server_error = HTTP_VERSION " 500 Server Internal Error";
 
 static const char *http_get    = "GET";
-static const char *http_head   = "HEAD";
+static const char *http_head    = "HEAD";
 static const char *http_post   = "POST";
 static const char *http_delete = "DELETE";
 
 static const char *htcpcp_status_i_am_a_teapot = HTCPCP_VERSION " 418 I'm a teapot";
 static const char *htcpcp_brew = "BREW";
+
+static const char *http_header_host                 = "Host: ";
+static const char *http_header_content_type         = "Content-Type: ";
+static const char *http_header_content_length       = "Content-Length: ";
+static const char *http_header_expect               = "Expect: ";
 
 /********** Private APIs **********/
 
@@ -202,6 +218,113 @@ static const char *http_status_to_string(enum HttpStatusCode status)
   return ret;
 }
 
+enum HttpMethod http_extract_request_method(const char *req)
+{
+  if (!req)
+    return HTTP_METHOD_UNKNOWN;
+
+  enum HttpMethod ret = HTTP_METHOD_UNKNOWN;
+
+  if (g_str_has_prefix(req, "GET"))
+    ret = HTTP_GET;
+  else if (g_str_has_prefix(req, "HEAD"))
+    ret = HTTP_HEAD;
+  else if (g_str_has_prefix(req, "POST"))
+    ret = HTTP_POST;
+  else if (g_str_has_prefix(req, "DELETE"))
+    ret = HTTP_DELETE;
+
+  return ret;
+}
+
+char *http_extract_request_path(const char *req)
+{
+  if (!req)
+    return NULL;
+
+  char *buffer = g_malloc(BUFSIZE);
+
+  sscanf(req, "%*s %4095s", buffer); // XXX: Hardcoded buffer size
+
+  char *ret = g_strdup(buffer);
+
+  g_free(buffer);
+  return ret;
+}
+
+char *http_extract_request_version(const char *req)
+{
+  if (!req)
+    return NULL;
+
+  char *buffer = g_malloc(BUFSIZE);
+
+  sscanf(req, "%*s %*s %4095s", buffer); // XXX: Hardcoded buffer size
+
+  char *ret = g_strdup(buffer);
+
+  g_free(buffer);
+  return ret;
+}
+
+char *http_extract_header(const char *http, enum RequestHeader header)
+{
+  if (!http)
+    return NULL;
+
+  char *buffer = g_malloc(BUFSIZE);
+  const char *line = NULL;
+
+  switch (header) {
+    case HTTP_HOST:
+      line = g_strstr_len(http, -1, http_header_host);
+      if (line) {
+        sscanf(line, "%*s %4095s", buffer);
+      }
+      break;
+    case HTTP_CONTENT_TYPE:
+      line = g_strstr_len(http, -1, http_header_content_type);
+      if (line) {
+        sscanf(line, "%*s %4095s", buffer);
+      }
+      break;
+    case HTTP_HEADER_CONTENT_LENGTH:
+      line = g_strstr_len(http, -1, http_header_content_length);
+      if (line) {
+        sscanf(line, "%*s %4095s", buffer);
+      }
+      break;
+    case HTTP_HEADER_EXPECT:
+      line = g_strstr_len(http, -1, http_header_expect);
+      if (line) {
+        sscanf(line, "%*s %4095s", buffer);
+      }
+      break;
+    default:
+      g_warning("%s:%d %s: unexpected header %d", __FILE__, __LINE__, __func__, header);
+      break;
+  }
+
+  char *ret = g_strdup(buffer);
+
+  g_free(buffer);
+  return ret;
+}
+
+char *http_extract_content(const char *http)
+{
+  if (!http)
+    return NULL;
+
+  const char *content_start = g_strstr_len(http, -1, "\n\r\n");
+  if (!content_start)
+    return NULL;
+
+  char *ret = g_strdup(content_start);
+
+  return ret;
+}
+
 /**
  * Parse an HTTP string into `struct HttpRequest` for future processing.
  *
@@ -210,7 +333,21 @@ static const char *http_status_to_string(enum HttpStatusCode status)
  */
 static struct HttpRequest teapot_http_request_parse(const char *http)
 {
-  // unimplemented
+    struct HttpRequest request;
+    // Request line
+    request.method = http_extract_request_method(http);
+    request.path = http_extract_request_path(http);
+    request.version = ttp_extract_request_version(http);
+
+    // Header fields
+    request.host = http_extract_header(http, HTTP_HOST);
+    request.content_type = http_extract_header(http, HTTP_CONTENT_TYPE);
+    request.content_length = http_extract_header(http, HTTP_HEADER_CONTENT_LENGTH);
+    request.expect = http_extract_header(http, HTTP_HEADER_EXPECT);
+
+    // Content
+    request.content = http_extract_content(http);
+    return request;
 }
 
 /**
@@ -288,21 +425,14 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
 
 char *teapot_http_process(size_t *size, const char *input)
 {
-    // test case
-    struct HttpResponse response =
-    {
-        HTTP_VERSION,
-        HTTP_STATUS_OK,
-        
-        "text/plain",
-        12,
-        "close",
-        NULL,
-        NULL,
-        
-        "Hello world!",
-    };
-  
+    // get the request
+    struct HttpRequest request = teapot_http_request_parse(input);
+    // All the information sent by client is storing in request now.
+
+
+    struct HttpResponse response;
+    // switch structure here
+    
     char *response_str = teapot_http_response_construct(response);
     // char *response_str = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
     *size = strlen(response_str);// < Record the length of the response string
