@@ -62,7 +62,7 @@ struct HttpRequest {
     // Header fields
     char *host;
     char *content_type;
-    char *content_length;
+    size_t content_length;
     char *expect;
     
     // Content
@@ -130,6 +130,26 @@ static const char *http_header_content_length       = "Content-Length: ";
 static const char *http_header_expect               = "Expect: ";
 
 /********** Private APIs **********/
+
+/**
+ * Convert string into integer.
+ */
+int toInteger(char a[]) {
+  int c, sign, offset, n;
+ 
+  if (a[0] == '-') sign = -1;
+ 
+  if (sign == -1) offset = 1;
+  else offset = 0;
+ 
+  n = 0;
+  for (c = offset; a[c] != '\0'; c++) {
+    n = n * 10 + a[c] - '0';
+  }
+ 
+  if (sign == -1) n = -n;
+  return n;
+}
 
 /**
  * Convert enumeration HttpMethod to string.
@@ -342,7 +362,7 @@ static struct HttpRequest teapot_http_request_parse(const char *http)
     // Header fields
     request.host = http_extract_header(http, HTTP_HOST);
     request.content_type = http_extract_header(http, HTTP_CONTENT_TYPE);
-    request.content_length = http_extract_header(http, HTTP_HEADER_CONTENT_LENGTH);
+    request.content_length = toInteger(http_extract_header(http, HTTP_HEADER_CONTENT_LENGTH));
     request.expect = http_extract_header(http, HTTP_HEADER_EXPECT);
 
     // Content
@@ -356,20 +376,22 @@ static struct HttpRequest teapot_http_request_parse(const char *http)
  * @param response [in] The `struct HttpResponse` to convert.
  * @return A NUL-terminated string of HTTP response.
  */
-static char *teapot_http_response_construct(const struct HttpResponse response)
-{
-    size_t response_size = 0;
-
-    // Convert the integer content_length into string
+size_t response_size = 0;
     char buffer[8]; // < For store the content-length
-    snprintf(buffer, 8, "%d", response.content_length);
 
     // Calculate the buffer size to allocate
     response_size += strlen(response.version);
     response_size += strlen(http_status_to_string(response.status_code)) + strlen("\n");
     
-    response_size += strlen("Content-Type: ") + strlen(response.content_type) + strlen("\n");
-    response_size += strlen("Content-Length: ") + strlen(buffer) + strlen("\n");
+    if (response.content_type) {
+      response_size += strlen("Content-Type: ") + strlen(response.content_type) + strlen("\n");
+    }
+    if (response.content_length) {
+      // Convert the integer content_length into string
+      snprintf(buffer, 8, "%d", response.content_length);
+
+      response_size += strlen("Content-Length: ") + strlen(buffer) + strlen("\n");
+    }
     if (response.connection) {
       response_size += strlen("Connection: ") + strlen(response.connection) + strlen("\n");
     }
@@ -394,12 +416,14 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
     strcat(output, http_status_to_string(response.status_code));
 
     // Header
-    strcat(output, "\nContent-Type: ");
-    strcat(output, response.content_type);
-
-    strcat(output, "\nContent-Length: ");
-    strcat(output, buffer);
-
+    if (response.content_type) {
+      strcat(output, "\nContent-Type: ");
+      strcat(output, response.content_type);
+    }
+    if (response.content_length) {
+      strcat(output, "\nContent-Length: ");
+      strcat(output, buffer);
+    }
     if (response.connection) {
       strcat(output, "\nConnection: ");
       strcat(output, response.connection);
