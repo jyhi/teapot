@@ -4,25 +4,37 @@
 /**
  * Binding information packed together.
  */
-struct TeapotBindings {
-  gchar  *address;    ///< Binding address of Teapot
-  guint16 http_port;  ///< HTTP binding port of Teapot
-  guint16 https_port; ///< HTTPS binding port of Teapot
+struct TeapotBinding {
+  gchar  *address; ///< Binding address of Teapot
+  guint16 port;    ///< Binding port of Teapot
 };
 
 /**
- * The Teapot listener, who binds Teapot on an address and listen to two ports
- * for HTTP and HTTPS service respectively.
+ * The Teapot HTTP listener.
  *
  * This function is designed to be used with GThread to spawn (GThreadFunc):
  *
  * ```c
- * gpointer teapot_listener(gpointer data);
+ * gpointer teapot_http_listener(gpointer data);
  * ```
  *
- * @param bindings [in] Binding information packed into struct TeapotBindings
+ * @param bindings [in] Binding information packed into struct TeapotBinding.
  * @return Something.
  */
-void *teapot_listener(const struct TeapotBindings *bindings);
+void *teapot_http_listener(const struct TeapotBinding *binding);
+
+/**
+ * The Teapot HTTPS listener.
+ *
+ * This function is designed to be used with GThread to spawn (GThreadFunc):
+ *
+ * ```c
+ * gpointer teapot_https_listener(gpointer data);
+ * ```
+ *
+ * @param bindings [in] Binding information packed into struct TeapotBinding.
+ * @return Something.
+ */
+void *teapot_https_listener(const struct TeapotBinding *binding);
 
 #endif
