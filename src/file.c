@@ -9,7 +9,7 @@ void teapot_file_free(struct TeapotFile *file)
   file->size = 0;
 }
 
-struct TeapotFile teapot_file_read(const char *path)
+struct TeapotFile *teapot_file_read(const char *path)
 {
   // unimplemented
 }
