@@ -96,5 +96,53 @@ struct TeapotFile *teapot_file_read(const char *path)
 
 bool teapot_file_write(const uint8_t *content, const size_t size, const char *path)
 {
-  // unimplemented
+  GError  *error = NULL;
+  gboolean r     = FALSE;
+
+  // For security consideration, we do not allow file access in parent directories
+  gchar *abspath = g_canonicalize_filename(path + 1, NULL);
+  g_debug("File: canonicalized filename: %s", abspath);
+  if (!g_str_has_prefix(abspath, g_get_current_dir())) {
+    g_message("File: requested path goes out of scope, reject");
+    g_free(abspath);
+    return false;
+  }
+
+  GFile *file = g_file_new_for_path(abspath);
+
+  // If there is already something, do nothing
+  if (g_file_query_exists(file, NULL)) {
+    g_message("File: resource already exists, reject");
+    g_clear_object(&file);
+    g_free(abspath);
+    return false;
+  }
+
+  // Open a file and write to it
+  r = g_file_replace_contents(
+    file,
+    (char *)content,
+    size,
+    NULL,
+    FALSE,
+    G_FILE_CREATE_REPLACE_DESTINATION,
+    NULL,
+    NULL,
+    &error
+  );
+  if (!r) {
+    g_warning("File: failed to write content into file: %s", error->message);
+    g_clear_error(&error);
+    g_clear_object(&file);
+    g_free(abspath);
+    return false;
+  }
+
+  g_debug("File: written %lu bytes", size);
+
+  // Free unused memory
+  g_clear_object(&file);
+  g_free(abspath);
+
+  return true;
 }
