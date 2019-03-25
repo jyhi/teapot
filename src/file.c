@@ -3,7 +3,10 @@
 
 void teapot_file_free(struct TeapotFile *file)
 {
-  // unimplemented
+  g_free(file->filename);
+  g_free(file->content_type);
+  g_free(file->content);
+  file->size = 0;
 }
 
 struct TeapotFile teapot_file_read(const char *path)
