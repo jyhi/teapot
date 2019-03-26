@@ -5,11 +5,19 @@ export AR = ar
 export RM = rm
 
 # Flags to be passed
-export CFLAGS   = -std=c99 -Wall -Wextra -Wpedantic -pipe -fstack-protector-all
+export CFLAGS   = -std=c99 -pipe -fstack-protector-all
 export CPPFLAGS =
 # export LDFLAGS  = -Wl,-z,defs,-z,relro,-z,now # This does not work on some macOSes...
 export RMFLAGS  = -f
 export ARFLAGS  = rcs
+
+# Turn on all warnings
+# ... except clang, who yells at glib...
+ifeq ($(CC), clang)
+CFLAGS += -Weverything -Wno-documentation -Wno-documentation-pedantic -Wno-reserved-id-macro -Wno-used-but-marked-unused -Wno-padded
+else
+CFLAGS += -Wall -Wextra -Wpedantic
+endif
 
 # Generate optimized code for release, otherwise for debug
 ifdef RELEASE
