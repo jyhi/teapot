@@ -29,10 +29,10 @@ void teapot_file_free(struct TeapotFile *file);
  * Read file from path.
  *
  * @param path [in]  Path to the file to load.
- * @return A `struct TeapotFile` representing the file. On failure, NULL is
- *         returned.
+ * @return A pointer to `struct TeapotFile` representing the file. On failure,
+ *         NULL is returned.
  */
-struct TeapotFile teapot_file_read(const char *path);
+struct TeapotFile *teapot_file_read(const char *path);
 
 /**
  * Write file to path.
