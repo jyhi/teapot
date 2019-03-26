@@ -1,5 +1,5 @@
 # Executables
-export CC = gcc
+export CC = clang
 export LD = $(CC)
 export AR = ar
 export RM = rm
