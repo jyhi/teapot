@@ -376,7 +376,9 @@ static struct HttpRequest teapot_http_request_parse(const char *http)
  * @param response [in] The `struct HttpResponse` to convert.
  * @return A NUL-terminated string of HTTP response.
  */
-size_t response_size = 0;
+static char *teapot_http_response_construct(const struct HttpResponse response)
+{
+    size_t response_size = 0;
     char buffer[8]; // < For store the content-length
 
     // Calculate the buffer size to allocate
