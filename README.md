@@ -19,11 +19,14 @@ Run Teapot with `--help` to read all possible options. The following are the maj
 - `-b` / `--bind` change binding address, default to 127.0.0.1
 - `-p` / `--http-port` change HTTP service binding port, default to 8080
 - `-P` / `--https-port` change HTTPS service binding port, default to 8443
+- `-c` / `--cert` specify TLS certificate file, default to "cert.pem" in current directory
+- `-k` / `--key` specify TLS private key file, default to "key.pem" in current directory
 
 ## Features
 
 - Basic HTTP support
 - Integrated TLS (HTTPS) support
+- Quick reaction
 
 ## Dependencies
 
