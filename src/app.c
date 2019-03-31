@@ -2,6 +2,7 @@
 #include <gio/gio.h>
 #include <glib.h>
 #include "server.h"
+#include "app.h"
 #include "config.h"
 
 // Address and ports to bind on
@@ -54,7 +55,7 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
       return 1;
     }
 
-    http_binding.port = CLAMP(temp_port, 1, G_MAXUINT16);
+    http_binding.port = (guint16)CLAMP(temp_port, 1, G_MAXUINT16);
   }
 
   if (g_variant_dict_lookup(opts, "https-port", "i", &temp_port)) {
@@ -64,7 +65,7 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
       return 1;
     }
 
-    https_binding.port = CLAMP(temp_port, 1, G_MAXUINT16);
+    https_binding.port = (guint16)CLAMP(temp_port, 1, G_MAXUINT16);
   }
 
   // Two ports cannot be the same

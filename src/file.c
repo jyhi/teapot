@@ -15,7 +15,7 @@ void teapot_file_free(struct TeapotFile *file)
   if (!file)
     return;
 
-  g_debug("File: freeing %s of size %lu", file->filename, file->size);
+  g_debug("File: freeing %s of size %zu", file->filename, file->size);
 
   if (file->filename)
     g_free(file->filename);
@@ -98,7 +98,7 @@ struct TeapotFile *teapot_file_read(const char *path, const size_t start, const 
   }
 
   // Allocate memory for buffer
-  g_debug("File: allocating %ul bytes of memory", range);
+  g_debug("File: allocating %zu bytes of memory", range);
   ret->content = g_malloc(range);
 
   // Read till range
@@ -114,7 +114,7 @@ struct TeapotFile *teapot_file_read(const char *path, const size_t start, const 
   }
 
   ret->size = (size_t)bytes_read;
-  g_debug("File: loaded %lu bytes", ret->size);
+  g_debug("File: loaded %zu bytes", ret->size);
 
   // Free unused memory
   g_clear_object(&file);
@@ -149,7 +149,7 @@ bool teapot_file_write(const uint8_t *content, const size_t size, const char *pa
   // Open a file and write to it
   r = g_file_replace_contents(
     file,
-    (char *)content,
+    (const char *)content,
     size,
     NULL,
     FALSE,
@@ -166,7 +166,7 @@ bool teapot_file_write(const uint8_t *content, const size_t size, const char *pa
     return false;
   }
 
-  g_debug("File: written %lu bytes", size);
+  g_debug("File: written %zu bytes", size);
 
   // Free unused memory
   g_clear_object(&file);
