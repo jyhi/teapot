@@ -32,18 +32,87 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
     return 0; // no future action is needed, exit
   }
 
+  // If a configuration file is specified, read it first
+  // (so the command line will win)
+  if (g_variant_dict_lookup(opts, "conf", "s", &temp_str) && temp_str) {
+    GError  *error = NULL;
+    gboolean r     = FALSE;
+
+    GKeyFile *conf = g_key_file_new();
+
+    r = g_key_file_load_from_file(conf, temp_str, G_KEY_FILE_NONE, &error);
+    if (!r) {
+      g_printerr("Config %s cannot be read: %s\n", temp_str, error->message);
+      g_clear_error(&error);
+    }
+
+    g_message("Reading configuration file %s", temp_str);
+    g_free(temp_str);
+
+    temp_str = g_key_file_get_string(conf, "Teapot", "bind", &error);
+    if (temp_str) {
+      http_binding.address  = g_strdup(temp_str);
+      https_binding.address = g_strdup(temp_str);
+      g_free(temp_str);
+    }
+
+    temp_str = g_key_file_get_string(conf, "Teapot", "cert", &error);
+    if (temp_str) {
+      https_binding.cert_path = g_strdup(temp_str);
+      g_free(temp_str);
+    }
+
+    temp_str = g_key_file_get_string(conf, "Teapot", "key", &error);
+    if (temp_str) {
+      https_binding.pkey_path = g_strdup(temp_str);
+      g_free(temp_str);
+    }
+
+    temp_port = (gint32)g_key_file_get_integer(conf, "Teapot", "http-port", &error);
+    if (temp_str != 0) {
+      // Port number is actually from 1 to 65535
+      if (temp_port < 1 || temp_port > G_MAXUINT16) {
+        g_printerr("Port number should range from 1 to 65535.\n");
+        return 1;
+      }
+
+      http_binding.port = (guint16)CLAMP(temp_port, 1, G_MAXUINT16);
+    }
+
+    temp_port = (gint32)g_key_file_get_integer(conf, "Teapot", "https-port", &error);
+    if (temp_str != 0) {
+      // Port number is actually from 1 to 65535
+      if (temp_port < 1 || temp_port > 65535) {
+        g_printerr("Port number should range from 1 to 65535.\n");
+        return 1;
+      }
+
+      https_binding.port = (guint16)CLAMP(temp_port, 1, G_MAXUINT16);
+    }
+
+    g_key_file_free(conf);
+  }
+
   if (g_variant_dict_lookup(opts, "bind", "s", &temp_str) && temp_str) {
+    // If this is specified in the config already, free this unused memory
+    g_free(http_binding.address);
+    g_free(https_binding.address);
+
     http_binding.address  = g_strdup(temp_str);
     https_binding.address = g_strdup(temp_str);
     g_free(temp_str);
   }
 
   if (g_variant_dict_lookup(opts, "cert", "s", &temp_str) && temp_str) {
+    g_free(https_binding.cert_path);
+
     https_binding.cert_path = g_strdup(temp_str);
     g_free(temp_str);
   }
 
   if (g_variant_dict_lookup(opts, "key", "s", &temp_str) && temp_str) {
+    g_free(https_binding.pkey_path);
+
     https_binding.pkey_path = g_strdup(temp_str);
     g_free(temp_str);
   }
@@ -114,6 +183,7 @@ int teapot_run(int argc, char **argv)
 
   // Adds description to the help manual (--help)
   g_application_set_option_context_parameter_string(app, "- a simple HTTP(S) server");
+  g_application_add_main_option(app, "conf", 'C', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, "Configuration file to use", "path");
   g_application_add_main_option(app, "bind", 'b', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, "Address to bind", "address");
   g_application_add_main_option(app, "http-port", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_INT, "Port to bind the HTTP service", "port");
   g_application_add_main_option(app, "https-port", 'P', G_OPTION_FLAG_NONE, G_OPTION_ARG_INT, "Port to bind the HTTPS service", "port");
