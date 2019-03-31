@@ -1,4 +1,5 @@
 #include <glib.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include "file.h"
