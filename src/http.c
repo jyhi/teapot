@@ -363,7 +363,7 @@ static struct HttpRequest teapot_http_request_parse(const char *http)
     // Header fields
     request.host = http_extract_header(http, HTTP_HOST);
     request.content_type = http_extract_header(http, HTTP_CONTENT_TYPE);
-    request.content_length = toInteger(http_extract_header(http, HTTP_HEADER_CONTENT_LENGTH));
+    request.content_length = (size_t)toInteger(http_extract_header(http, HTTP_HEADER_CONTENT_LENGTH));
     request.expect = http_extract_header(http, HTTP_HEADER_EXPECT);
 
     // Content
@@ -390,7 +390,7 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
     }
     if (response.content_length) {
       // Convert the integer content_length into string
-      snprintf(buffer, 8, "%d", response.content_length);
+      snprintf(buffer, 8, "%zu", response.content_length);
 
       response_size += strlen("Content-Length: ") + strlen(buffer) + strlen("\n");
     }
