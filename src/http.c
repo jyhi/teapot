@@ -406,10 +406,10 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
     response_size += strlen("\n\r\n");
 
     if (response.content) {
-      response_size += strlen(response.content) + strlen("\n");
+      response_size += response.content_length + strlen("\n");
     }
 
-    char *output = (char*)malloc(sizeof(char) * response_size + 1);
+    char *output = g_malloc(response_size + 1);
     // NOTE: This is required for strcat() to work properly!
     output[0] = '\0';
 
@@ -437,12 +437,15 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
       strcat(output, "\nAllow: ");
       strcat(output, response.allow);
     }
+
     strcat(output, "\n\r\n");
+
     // Content
+    // NOTE: the content may not be ASCII string...
     if (response.content) {
-      strcat(output, response.content);
-      // strcat(output, "\0");
+      memcpy(output + strlen(output), response.content, response.content_length);
     }
+
     return output;
 }
 
