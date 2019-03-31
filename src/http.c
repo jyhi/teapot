@@ -5,7 +5,7 @@
 #include "file.h"
 #include "http.h"
 
-#define BUFSIZE 1024
+#define BUFSIZE 4096
 
 /********** Internal types **********/
 
