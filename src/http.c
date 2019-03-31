@@ -134,9 +134,9 @@ static const char *http_header_expect               = "Expect: ";
 /**
  * Convert string into integer.
  */
-int toInteger(char a[]) {
-  int c, sign, offset, n;
- 
+static int toInteger(char a[]) {
+  int c = '\0', sign = 0, offset = 0, n = 0;
+
   if (a[0] == '-') sign = -1;
  
   if (sign == -1) offset = 1;
