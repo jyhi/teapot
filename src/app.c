@@ -145,7 +145,7 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
   }
 
   // Read configuration file first (so the command line will win)
-  if (g_variant_dict_lookup(opts, "conf", "s", &temp_str) && temp_str) {
+  if (g_variant_dict_lookup(opts, "config", "s", &temp_str) && temp_str) {
 
     // The configuration file specified in command line wins
     int r = teapot_read_config_file(temp_str);
@@ -262,7 +262,7 @@ int teapot_run(int argc, char **argv)
 
   // Adds description to the help manual (--help)
   g_application_set_option_context_parameter_string(app, "- a simple HTTP(S) server");
-  g_application_add_main_option(app, "conf", 'C', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, "Configuration file to use", "path");
+  g_application_add_main_option(app, "config", 'C', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, "Configuration file to use", "path");
   g_application_add_main_option(app, "bind", 'b', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, "Address to bind", "address");
   g_application_add_main_option(app, "http-port", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_INT, "Port to bind the HTTP service", "port");
   g_application_add_main_option(app, "https-port", 'P', G_OPTION_FLAG_NONE, G_OPTION_ARG_INT, "Port to bind the HTTPS service", "port");
