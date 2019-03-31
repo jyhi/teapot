@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "file.h"
+#include "http.h"
 
 #define BUFSIZE 1024
 
