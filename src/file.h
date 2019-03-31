@@ -9,6 +9,11 @@
 #include <stdint.h>
 
 /**
+ * Used in `teapot_file_read` to indicate a whole-file read.
+ */
+#define TEAPOT_FILE_READ_RANGE_FULL 0
+
+/**
  * A data structure representing a file loaded into the memory.
  */
 struct TeapotFile {
@@ -29,9 +34,9 @@ void teapot_file_free(struct TeapotFile *file);
 /**
  * Read file from path.
  *
- * @param path  [in]  Path to the file to load.
+ * @param path  [in] Path to the file to load.
  * @param start [in] The start byte to read.
- * @param range [in] Size of the file to read.
+ * @param range [in] Size of the file to read. If this is 0, read until EOF.
  * @return A pointer to `struct TeapotFile` representing the file. On failure,
  *         NULL is returned.
  */

@@ -32,6 +32,7 @@ void teapot_file_free(struct TeapotFile *file)
 struct TeapotFile *teapot_file_read(const char *path, const size_t start, const size_t range)
 {
   GError  *error = NULL;
+  gboolean r     = FALSE;
 
   // For security consideration, we do not allow file access in parent directories
   gchar *abspath = g_canonicalize_filename(path + 1, NULL);
@@ -74,46 +75,61 @@ struct TeapotFile *teapot_file_read(const char *path, const size_t start, const 
 
   g_clear_object(&info);
 
-  // Read the file into memory based on the designated start byte and range
-  GFileInputStream *stream_in = g_file_read(file, NULL, &error);
-  if (!stream_in) {
-    g_warning("Failed to create input stream: %s", error->message);
-    g_clear_error(&error);
-    teapot_file_free(ret);
-    g_clear_object(&file);
+  if (range == TEAPOT_FILE_READ_RANGE_FULL) {
+    // Read the whole file
+    r = g_file_load_contents(file, NULL, (char **)&(ret->content), &(ret->size), NULL, &error);
+    if (!r) {
+      g_warning("File: failed to load the whole file: %s", error->message);
+      g_clear_error(&error);
+      teapot_file_free(ret);
+      g_clear_object(&file);
 
-    return NULL;
+      return NULL;
+    }
+  } else {
+    // Read partial file based on the designated start byte and range
+    GFileInputStream *stream_in = g_file_read(file, NULL, &error);
+    if (!stream_in) {
+      g_warning("Failed to create input stream: %s", error->message);
+      g_clear_error(&error);
+      teapot_file_free(ret);
+      g_clear_object(&file);
+
+      return NULL;
+    }
+
+    // Skip till start
+    gssize bytes_skipped = g_input_stream_skip(G_INPUT_STREAM(stream_in), start, NULL, &error);
+    if (bytes_skipped < 0) {
+      g_warning("Failed to seek file to start: %s", error->message);
+      g_clear_error(&error);
+      teapot_file_free(ret);
+      g_clear_object(&stream_in);
+      g_clear_object(&file);
+
+      return NULL;
+    }
+
+    // Allocate memory for buffer
+
+    g_debug("File: allocating %zu bytes of memory", range);
+    ret->content = g_malloc(range);
+
+    // Read till range
+    gssize bytes_read = g_input_stream_read(G_INPUT_STREAM(stream_in), ret->content, range, NULL, &error);
+    if (bytes_read < 0) {
+      g_warning("Failed to load file into memory: %s", error->message);
+      g_clear_error(&error);
+      teapot_file_free(ret);
+      g_clear_object(&stream_in);
+      g_clear_object(&file);
+
+      return NULL;
+    }
+
+    ret->size = (size_t)bytes_read;
   }
 
-  // Skip till start
-  gssize bytes_skipped = g_input_stream_skip(G_INPUT_STREAM(stream_in), start, NULL, &error);
-  if (bytes_skipped < 0) {
-    g_warning("Failed to seek file to start: %s", error->message);
-    g_clear_error(&error);
-    teapot_file_free(ret);
-    g_clear_object(&stream_in);
-    g_clear_object(&file);
-
-    return NULL;
-  }
-
-  // Allocate memory for buffer
-  g_debug("File: allocating %zu bytes of memory", range);
-  ret->content = g_malloc(range);
-
-  // Read till range
-  gssize bytes_read = g_input_stream_read(G_INPUT_STREAM(stream_in), ret->content, range, NULL, &error);
-  if (bytes_read < 0) {
-    g_warning("Failed to load file into memory: %s", error->message);
-    g_clear_error(&error);
-    teapot_file_free(ret);
-    g_clear_object(&stream_in);
-    g_clear_object(&file);
-
-    return NULL;
-  }
-
-  ret->size = (size_t)bytes_read;
   g_debug("File: loaded %zu bytes", ret->size);
 
   // Free unused memory
