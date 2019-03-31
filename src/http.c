@@ -435,7 +435,7 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
       strcat(output, "\nAllow: ");
       strcat(output, response.allow);
     }
-    strcat(output, "\r\n");
+    strcat(output, "\n\r\n");
     // Content
     if (response.content) {
       strcat(output, response.content);
