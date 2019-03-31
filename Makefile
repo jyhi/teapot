@@ -7,7 +7,7 @@ export RM = rm
 # Flags to be passed
 export CFLAGS   = -std=c99 -pipe -fstack-protector-all
 export CPPFLAGS =
-# export LDFLAGS  = -Wl,-z,defs,-z,relro,-z,now # This does not work on some macOSes...
+export LDFLAGS  =
 export RMFLAGS  = -f
 export ARFLAGS  = rcs
 
