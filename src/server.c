@@ -198,7 +198,7 @@ void *teapot_http_listener(const struct TeapotHttpBinding *binding)
   gboolean r     = FALSE;
 
   g_debug("HTTP: creating thread pool");
-  GThreadPool *pool = g_thread_pool_new((GFunc *)teapot_http_accepter, NULL, TEAPOT_DEFAULT_THREAD_POOL_MAX_THREADS, FALSE, &error);
+  GThreadPool *pool = g_thread_pool_new((GFunc)teapot_http_accepter, NULL, TEAPOT_DEFAULT_THREAD_POOL_MAX_THREADS, FALSE, &error);
   if (error) {
     // "An error can only occur when exclusive is set to TRUE and not all
     // max_threads threads could be created... Note, even in case of error a
@@ -277,7 +277,7 @@ void *teapot_https_listener(const struct TeapotHttpsBinding *binding)
   }
 
   g_debug("HTTPS: creating thread pool");
-  GThreadPool *pool = g_thread_pool_new((GFunc *)teapot_https_accepter, tls, TEAPOT_DEFAULT_THREAD_POOL_MAX_THREADS, FALSE, &error);
+  GThreadPool *pool = g_thread_pool_new((GFunc)teapot_https_accepter, tls, TEAPOT_DEFAULT_THREAD_POOL_MAX_THREADS, FALSE, &error);
   if (error) {
     // "An error can only occur when exclusive is set to TRUE and not all
     // max_threads threads could be created... Note, even in case of error a
