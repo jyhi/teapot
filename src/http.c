@@ -332,7 +332,7 @@ static char *http_extract_header(const char *http, enum RequestHeader header)
   return ret;
 }
 
-static char *http_extract_content(const char *http)
+static uint8_t *http_extract_content(const char *http)
 {
   if (!http)
     return NULL;
@@ -341,7 +341,13 @@ static char *http_extract_content(const char *http)
   if (!content_start)
     return NULL;
 
-  char *ret = g_strdup(content_start);
+  char  *content_length_str = http_extract_header(http, HTTP_HEADER_CONTENT_LENGTH);
+  size_t content_length     = (size_t)toInteger(content_length_str);
+
+  uint8_t *ret = g_malloc(content_length);
+  memcpy(ret, content_start, content_length);
+
+  g_free(content_length_str);
 
   return ret;
 }
