@@ -403,7 +403,7 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
     if (response.allow) {
       response_size += strlen("Allow: ") + strlen(response.allow);
     }
-    response_size += strlen("\r\n");
+    response_size += strlen("\n\r\n");
 
     if (response.content) {
       response_size += strlen(response.content) + strlen("\n");
