@@ -68,6 +68,7 @@ struct TeapotFile *teapot_file_read(const char *path, const size_t start, const 
 
   ret->filename     = g_strdup(g_file_info_get_name(info));
   ret->content_type = g_strdup(g_file_info_get_content_type(info));
+  ret->start        = start;
 
   g_debug("File: %s is of type %s", ret->filename, ret->content_type);
 
