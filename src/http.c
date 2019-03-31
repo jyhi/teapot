@@ -27,17 +27,17 @@ enum HttpStatusCode {
     HTTP_STATUS_UNKNOWN,                ///< Unknown HTTP status code
     HTTP_STATUS_OK,                     ///< HTTP 200
     HTTP_STATUS_NO_CONTENT,             ///< HTTP 204
-    
+
     HTTP_STATUS_MOVED_PERMANENTLY,      ///< HTTP 301
     HTTP_STATUS_FOUND,                  ///< HTTP 302
-    
+
     HTTP_STATUS_BAD_REQUEST,            ///< HTTP 400
     HTTP_STATUS_FORBIDDEN,              ///< HTTP 403
     HTTP_STATUS_NOT_FOUND,              ///< HTTP 404
     HTTP_STATUS_METHOD_NOT_ALLOWED,     ///< HTTP 405
-    
+
     HTTP_STATUS_INTERNAL_SERVER_ERROR,  ///< HTTP 500
-    
+
     HTCPCP_STATUS_I_AM_A_TEAPOT,        ///< HTCPCP 418 :)
 };
 
@@ -59,13 +59,13 @@ struct HttpRequest {
     enum HttpMethod method;
     char *path;
     char *version;
-    
+
     // Header fields
     char *host;
     char *content_type;
     size_t content_length;
     char *expect;
-    
+
     // Content
     uint8_t *content;
 };
@@ -76,14 +76,14 @@ struct HttpRequest {
 struct HttpResponse {
     // Status line
     enum HttpStatusCode status_code;
-    
+
     // Header fields
     char *content_type;
     size_t content_length;
     char *connection;
     char *location;
     char *allow;
-    
+
     // Content
     uint8_t *content;
 };
@@ -138,15 +138,15 @@ static int toInteger(char a[]) {
   int c = '\0', sign = 0, offset = 0, n = 0;
 
   if (a[0] == '-') sign = -1;
- 
+
   if (sign == -1) offset = 1;
   else offset = 0;
- 
+
   n = 0;
   for (c = offset; a[c] != '\0'; c++) {
     n = n * 10 + a[c] - '0';
   }
- 
+
   if (sign == -1) n = -n;
   return n;
 }
@@ -383,7 +383,7 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
 
     // Calculate the buffer size to allocate
     response_size += strlen(http_status_to_string(response.status_code)) + strlen("\n");
-    
+
     if (response.content_type) {
       response_size += strlen("Content-Type: ") + strlen(response.content_type) + strlen("\n");
     }
@@ -403,7 +403,7 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
       response_size += strlen("Allow: ") + strlen(response.allow);
     }
     response_size += strlen("\r\n");
-    
+
     if (response.content) {
       response_size += strlen(response.content) + strlen("\n");
     }
