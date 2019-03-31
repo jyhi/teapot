@@ -24,7 +24,7 @@ Run Teapot with `--help` to read all possible options. The following are the maj
 
 Configuring Teapot with a configuration file is also supported, with the `-C` / `--conf` flag. The format of configuration file follows what `GKeyFile` implements ([Desktop Entry Specification](https://freedesktop.org/wiki/Specifications/desktop-entry-spec)), and looks a little bit awkward. Basically there are two sections: `[Teapot]` and `[URL]`. In `[Teapot]` section, all command line flags can be set with their name as keys. In `[URL]` section, several URL actions are defined, e.g. redirection.
 
-See the [sample configuration file](teapot.conf) for possible options.
+See the [sample configuration file](teapot.example.conf) for possible options.
 
 ## Features
 
