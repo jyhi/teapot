@@ -29,6 +29,11 @@
 #define TEAPOT_DEFAULT_TLS_PRIVATE_KEY_PATH "key.pem"
 
 /**
+ * Define default path for the configuration file.
+ */
+#define TEAPOT_DEFAULT_CONFIG_FILE_PATH "teapot.conf"
+
+/**
  * Define default maximum thread allowed in a thread pool. -1 for unlimited.
  */
 #define TEAPOT_DEFAULT_THREAD_POOL_MAX_THREADS -1

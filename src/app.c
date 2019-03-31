@@ -21,6 +21,116 @@ static struct TeapotHttpsBinding https_binding = {
 
 /********** Private APIs **********/
 
+static int teapot_read_config_file(const char *path)
+{
+  gchar   *temp_str  = NULL;
+  gint32   temp_port = 0;
+  GError  *error     = NULL;
+  gboolean r         = FALSE;
+
+  GKeyFile *conf = g_key_file_new();
+
+  r = g_key_file_load_from_file(conf, path, G_KEY_FILE_NONE, &error);
+  if (!r) {
+    g_printerr("Cannot load config file %s: %s\n", path, error->message);
+    g_clear_error(&error);
+  }
+
+  g_message("Reading configuration file %s", path);
+
+  temp_str = g_key_file_get_string(conf, "Teapot", "bind", &error);
+  if (temp_str) {
+    http_binding.address  = g_strdup(temp_str);
+    https_binding.address = g_strdup(temp_str);
+    g_free(temp_str);
+  }
+
+  temp_str = g_key_file_get_string(conf, "Teapot", "cert", &error);
+  if (temp_str) {
+    https_binding.cert_path = g_strdup(temp_str);
+    g_free(temp_str);
+  }
+
+  temp_str = g_key_file_get_string(conf, "Teapot", "key", &error);
+  if (temp_str) {
+    https_binding.pkey_path = g_strdup(temp_str);
+    g_free(temp_str);
+  }
+
+  temp_port = (gint32)g_key_file_get_integer(conf, "Teapot", "http-port", &error);
+  if (temp_str != 0) {
+    // Port number is actually from 1 to 65535
+    if (temp_port < 1 || temp_port > G_MAXUINT16) {
+      g_printerr("Port number should range from 1 to 65535.\n");
+      return 1;
+    }
+
+    http_binding.port = (guint16)CLAMP(temp_port, 1, G_MAXUINT16);
+  }
+
+  temp_port = (gint32)g_key_file_get_integer(conf, "Teapot", "https-port", &error);
+  if (temp_str != 0) {
+    // Port number is actually from 1 to 65535
+    if (temp_port < 1 || temp_port > 65535) {
+      g_printerr("Port number should range from 1 to 65535.\n");
+      return 1;
+    }
+
+    https_binding.port = (guint16)CLAMP(temp_port, 1, G_MAXUINT16);
+  }
+
+  // Also reads URL section for 302 redirection list
+  gsize n_redir_path = 0;
+  gchar **redir_path = g_key_file_get_string_list(conf, "URL", "302-path", &n_redir_path, &error);
+  if (redir_path) {
+    gsize n_redir_target = 0;
+    gchar **redir_target = g_key_file_get_string_list(conf, "URL", "302-target", &n_redir_target, &error);
+    if (redir_target) {
+
+      g_message("Setting up redirection");
+
+      if (n_redir_path != n_redir_target) {
+        // Two lists have different length, not good
+        g_warning("Malformed 302 list: number of path and target does not match");
+
+        // Free resources
+        g_strfreev(redir_target);
+        g_strfreev(redir_path);
+        g_key_file_free(conf);
+
+        // In this case we shall not continue
+        return 1;
+      }
+
+      // Build the hash table (with destroy notifiers)
+      GHashTable *redir_list = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+      for (gsize i = 0; i < n_redir_path; i++) {
+        g_debug("302: %s -> %s", redir_path[i], redir_target[i]);
+        g_hash_table_insert(redir_list, g_strdup(redir_path[i]), g_strdup(redir_target[i]));
+      }
+
+      // Put the hash table into our provider
+      teapot_redir_302_init(redir_list);
+
+      // The provider holds a reference, so we unref here
+      g_hash_table_unref(redir_list);
+
+      // Free unused memory, they are already duplicated into the hash table
+      g_strfreev(redir_target);
+      g_strfreev(redir_path);
+
+    } else {
+      g_warning("Malformed 302 list: %s", error->message);
+      g_clear_error(&error);
+    }
+  } else {} // we just skip it if not defined
+
+  g_key_file_free(conf);
+
+  return 0;
+}
+
 static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer data)
 {
   (void) app;
@@ -33,113 +143,33 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
     return 0; // no future action is needed, exit
   }
 
-  // If a configuration file is specified, read it first
-  // (so the command line will win)
+  // Read configuration file first (so the command line will win)
   if (g_variant_dict_lookup(opts, "conf", "s", &temp_str) && temp_str) {
-    GError  *error = NULL;
-    gboolean r     = FALSE;
 
-    GKeyFile *conf = g_key_file_new();
-
-    r = g_key_file_load_from_file(conf, temp_str, G_KEY_FILE_NONE, &error);
-    if (!r) {
-      g_printerr("Config %s cannot be read: %s\n", temp_str, error->message);
-      g_clear_error(&error);
-    }
-
-    g_message("Reading configuration file %s", temp_str);
+    // The configuration file specified in command line wins
+    int r = teapot_read_config_file(temp_str);
     g_free(temp_str);
 
-    temp_str = g_key_file_get_string(conf, "Teapot", "bind", &error);
-    if (temp_str) {
-      http_binding.address  = g_strdup(temp_str);
-      https_binding.address = g_strdup(temp_str);
-      g_free(temp_str);
-    }
+    // An error occurred during configuration reading
+    if (r != 0)
+      return r;
 
-    temp_str = g_key_file_get_string(conf, "Teapot", "cert", &error);
-    if (temp_str) {
-      https_binding.cert_path = g_strdup(temp_str);
-      g_free(temp_str);
-    }
+  } else {
 
-    temp_str = g_key_file_get_string(conf, "Teapot", "key", &error);
-    if (temp_str) {
-      https_binding.pkey_path = g_strdup(temp_str);
-      g_free(temp_str);
-    }
+    // If no configuration file is specified, try reading it from the default path
+    GFile *default_config = g_file_new_for_path(TEAPOT_DEFAULT_CONFIG_FILE_PATH);
+    int r = 0;
 
-    temp_port = (gint32)g_key_file_get_integer(conf, "Teapot", "http-port", &error);
-    if (temp_str != 0) {
-      // Port number is actually from 1 to 65535
-      if (temp_port < 1 || temp_port > G_MAXUINT16) {
-        g_printerr("Port number should range from 1 to 65535.\n");
-        return 1;
-      }
+    if (g_file_query_exists(default_config, NULL))
+      r = teapot_read_config_file(TEAPOT_DEFAULT_CONFIG_FILE_PATH);
 
-      http_binding.port = (guint16)CLAMP(temp_port, 1, G_MAXUINT16);
-    }
+    g_clear_object(&default_config);
 
-    temp_port = (gint32)g_key_file_get_integer(conf, "Teapot", "https-port", &error);
-    if (temp_str != 0) {
-      // Port number is actually from 1 to 65535
-      if (temp_port < 1 || temp_port > 65535) {
-        g_printerr("Port number should range from 1 to 65535.\n");
-        return 1;
-      }
+    // An error occurred during configuration reading
+    if (r != 0)
+      return r;
 
-      https_binding.port = (guint16)CLAMP(temp_port, 1, G_MAXUINT16);
-    }
-
-    // Also reads URL section for 302 redirection list
-    gsize n_redir_path = 0;
-    gchar **redir_path = g_key_file_get_string_list(conf, "URL", "302-path", &n_redir_path, &error);
-    if (redir_path) {
-      gsize n_redir_target = 0;
-      gchar **redir_target = g_key_file_get_string_list(conf, "URL", "302-target", &n_redir_target, &error);
-      if (redir_target) {
-
-        g_message("Setting up redirection");
-
-        if (n_redir_path != n_redir_target) {
-          // Two lists have different length, not good
-          g_warning("Malformed 302 list: number of path and target does not match");
-
-          // Free resources
-          g_strfreev(redir_target);
-          g_strfreev(redir_path);
-          g_key_file_free(conf);
-
-          // In this case we shall not continue
-          return 1;
-        }
-
-        // Build the hash table (with destroy notifiers)
-        GHashTable *redir_list = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
-
-        for (gsize i = 0; i < n_redir_path; i++) {
-          g_debug("302: %s -> %s", redir_path[i], redir_target[i]);
-          g_hash_table_insert(redir_list, g_strdup(redir_path[i]), g_strdup(redir_target[i]));
-        }
-
-        // Put the hash table into our provider
-        teapot_redir_302_init(redir_list);
-
-        // The provider holds a reference, so we unref here
-        g_hash_table_unref(redir_list);
-
-        // Free unused memory, they are already duplicated into the hash table
-        g_strfreev(redir_target);
-        g_strfreev(redir_path);
-
-      } else {
-        g_warning("Malformed 302 list: %s", error->message);
-        g_clear_error(&error);
-      }
-    } else {} // we just skip it if not defined
-
-    g_key_file_free(conf);
-  } // if (g_variant_dict_lookup(opts, "conf", "s", &temp_str) && temp_str)
+  }
 
   if (g_variant_dict_lookup(opts, "bind", "s", &temp_str) && temp_str) {
     // If this is specified in the config already, free this unused memory
