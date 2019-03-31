@@ -74,7 +74,6 @@ struct HttpRequest {
  */
 struct HttpResponse {
     // Status line
-    char *version;
     enum HttpStatusCode status_code;
     
     // Header fields
@@ -382,7 +381,6 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
     char buffer[8]; // < For store the content-length
 
     // Calculate the buffer size to allocate
-    response_size += strlen(response.version);
     response_size += strlen(http_status_to_string(response.status_code)) + strlen("\n");
     
     if (response.content_type) {
@@ -414,7 +412,6 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
     output[0] = '\0';
 
     // The first line
-    strcat(output, response.version);
     strcat(output, http_status_to_string(response.status_code));
 
     // Header
