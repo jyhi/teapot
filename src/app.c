@@ -3,6 +3,7 @@
 #include <glib.h>
 #include "server.h"
 #include "app.h"
+#include "redir.h"
 #include "config.h"
 
 // Address and ports to bind on
@@ -90,8 +91,55 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
       https_binding.port = (guint16)CLAMP(temp_port, 1, G_MAXUINT16);
     }
 
+    // Also reads URL section for 302 redirection list
+    gsize n_redir_path = 0;
+    gchar **redir_path = g_key_file_get_string_list(conf, "URL", "302-path", &n_redir_path, &error);
+    if (redir_path) {
+      gsize n_redir_target = 0;
+      gchar **redir_target = g_key_file_get_string_list(conf, "URL", "302-target", &n_redir_target, &error);
+      if (redir_target) {
+
+        g_message("Setting up redirection");
+
+        if (n_redir_path != n_redir_target) {
+          // Two lists have different length, not good
+          g_warning("Malformed 302 list: number of path and target does not match");
+
+          // Free resources
+          g_strfreev(redir_target);
+          g_strfreev(redir_path);
+          g_key_file_free(conf);
+
+          // In this case we shall not continue
+          return 1;
+        }
+
+        // Build the hash table (with destroy notifiers)
+        GHashTable *redir_list = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+        for (gsize i = 0; i < n_redir_path; i++) {
+          g_debug("302: %s -> %s", redir_path[i], redir_target[i]);
+          g_hash_table_insert(redir_list, g_strdup(redir_path[i]), g_strdup(redir_target[i]));
+        }
+
+        // Put the hash table into our provider
+        teapot_redir_302_init(redir_list);
+
+        // The provider holds a reference, so we unref here
+        g_hash_table_unref(redir_list);
+
+        // Free unused memory, they are already duplicated into the hash table
+        g_strfreev(redir_target);
+        g_strfreev(redir_path);
+
+      } else {
+        g_warning("Malformed 302 list: %s", error->message);
+        g_clear_error(&error);
+      }
+    } else {} // we just skip it if not defined
+
     g_key_file_free(conf);
-  }
+  } // if (g_variant_dict_lookup(opts, "conf", "s", &temp_str) && temp_str)
 
   if (g_variant_dict_lookup(opts, "bind", "s", &temp_str) && temp_str) {
     // If this is specified in the config already, free this unused memory
