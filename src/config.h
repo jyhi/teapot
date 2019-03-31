@@ -28,4 +28,9 @@
 #define TEAPOT_DEFAULT_TLS_CERTIFICATE_PATH "cert.pem"
 #define TEAPOT_DEFAULT_TLS_PRIVATE_KEY_PATH "key.pem"
 
+/**
+ * Define default maximum thread allowed in a thread pool. -1 for unlimited.
+ */
+#define TEAPOT_DEFAULT_THREAD_POOL_MAX_THREADS -1
+
 #endif
