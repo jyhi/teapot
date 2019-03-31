@@ -239,7 +239,7 @@ static const char *http_status_to_string(enum HttpStatusCode status)
   return ret;
 }
 
-enum HttpMethod http_extract_request_method(const char *req)
+static enum HttpMethod http_extract_request_method(const char *req)
 {
   if (!req)
     return HTTP_METHOD_UNKNOWN;
@@ -258,7 +258,7 @@ enum HttpMethod http_extract_request_method(const char *req)
   return ret;
 }
 
-char *http_extract_request_path(const char *req)
+static char *http_extract_request_path(const char *req)
 {
   if (!req)
     return NULL;
@@ -273,7 +273,7 @@ char *http_extract_request_path(const char *req)
   return ret;
 }
 
-char *http_extract_request_version(const char *req)
+static char *http_extract_request_version(const char *req)
 {
   if (!req)
     return NULL;
@@ -288,7 +288,7 @@ char *http_extract_request_version(const char *req)
   return ret;
 }
 
-char *http_extract_header(const char *http, enum RequestHeader header)
+static char *http_extract_header(const char *http, enum RequestHeader header)
 {
   if (!http)
     return NULL;
@@ -332,7 +332,7 @@ char *http_extract_header(const char *http, enum RequestHeader header)
   return ret;
 }
 
-char *http_extract_content(const char *http)
+static char *http_extract_content(const char *http)
 {
   if (!http)
     return NULL;
