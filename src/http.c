@@ -356,7 +356,7 @@ static struct HttpRequest teapot_http_request_parse(const char *http)
     // Request line
     request.method = http_extract_request_method(http);
     request.path = http_extract_request_path(http);
-    request.version = ttp_extract_request_version(http);
+    request.version = http_extract_request_version(http);
 
     // Header fields
     request.host = http_extract_header(http, HTTP_HOST);
