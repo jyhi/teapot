@@ -34,6 +34,7 @@ static int teapot_read_config_file(const char *path)
   if (!r) {
     g_printerr("Cannot load config file %s: %s\n", path, error->message);
     g_clear_error(&error);
+    return 1;
   }
 
   g_message("Reading configuration file %s", path);
