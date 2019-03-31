@@ -14,6 +14,7 @@
 struct TeapotFile {
   char    *filename;     ///< Name of the file
   char    *content_type; ///< MIME type of the file
+  size_t   start;        ///< Start byte of the file
   size_t   size;         ///< Size of the file
   uint8_t *content;      ///< Binary content of the file
 };
@@ -28,11 +29,13 @@ void teapot_file_free(struct TeapotFile *file);
 /**
  * Read file from path.
  *
- * @param path [in]  Path to the file to load.
+ * @param path  [in]  Path to the file to load.
+ * @param start [in] The start byte to read.
+ * @param range [in] Size of the file to read.
  * @return A pointer to `struct TeapotFile` representing the file. On failure,
  *         NULL is returned.
  */
-struct TeapotFile *teapot_file_read(const char *path);
+struct TeapotFile *teapot_file_read(const char *path, const size_t start, const size_t range);
 
 /**
  * Write file to path.
