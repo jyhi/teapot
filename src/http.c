@@ -179,7 +179,8 @@ static const char *http_method_to_string(enum HttpMethod method)
     case HTCPCP_BREW:
       ret = htcpcp_brew;
       break;
-    default:
+    case HTTP_METHOD_UNKNOWN: // fall through
+    // default: // <- clang thinks this is unnecessary...
       break; // Remain ret to be NULL
   }
 
@@ -233,7 +234,8 @@ static const char *http_status_to_string(enum HttpStatusCode status)
       ret = htcpcp_status_i_am_a_teapot;
       break;
 
-    default:
+    case HTTP_STATUS_UNKNOWN: // fall through
+    // default:
       break; // Remain ret to be NULL
   }
   return ret;
@@ -321,9 +323,9 @@ static char *http_extract_header(const char *http, enum RequestHeader header)
         sscanf(line, "%*s %4095s", buffer);
       }
       break;
-    default:
-      g_warning("%s:%d %s: unexpected header %d", __FILE__, __LINE__, __func__, header);
-      break;
+    // default: // <- clang thinks this is unnecessary...
+    //   g_warning("%s:%d %s: unexpected header %d", __FILE__, __LINE__, __func__, header);
+    //   break;
   }
 
   char *ret = g_strdup(buffer);
