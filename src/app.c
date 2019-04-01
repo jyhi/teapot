@@ -7,16 +7,18 @@
 #include "config.h"
 
 // Address and ports to bind on
+// Strings are set later to prevent memory freeing on static data
+// (which is illegal)
 static struct TeapotHttpBinding http_binding = {
-  TEAPOT_DEFAULT_BIND_ADDRESS,
-  TEAPOT_DEFAULT_HTTP_PORT,
+  .address = NULL,
+  .port    = TEAPOT_DEFAULT_HTTP_PORT,
 };
 
 static struct TeapotHttpsBinding https_binding = {
-  TEAPOT_DEFAULT_BIND_ADDRESS,
-  TEAPOT_DEFAULT_HTTPS_PORT,
-  TEAPOT_DEFAULT_TLS_CERTIFICATE_PATH,
-  TEAPOT_DEFAULT_TLS_PRIVATE_KEY_PATH,
+  .address   = NULL,
+  .port      = TEAPOT_DEFAULT_HTTPS_PORT,
+  .cert_path = NULL,
+  .pkey_path = NULL,
 };
 
 /********** Private APIs **********/
@@ -180,6 +182,10 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
     http_binding.address  = g_strdup(temp_str);
     https_binding.address = g_strdup(temp_str);
     g_free(temp_str);
+  } else {
+    // If not, set the default
+    http_binding.address  = TEAPOT_DEFAULT_BIND_ADDRESS;
+    https_binding.address = TEAPOT_DEFAULT_BIND_ADDRESS;
   }
 
   if (g_variant_dict_lookup(opts, "cert", "s", &temp_str) && temp_str) {
@@ -187,6 +193,8 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
 
     https_binding.cert_path = g_strdup(temp_str);
     g_free(temp_str);
+  } else {
+    https_binding.cert_path = TEAPOT_DEFAULT_TLS_CERTIFICATE_PATH;
   }
 
   if (g_variant_dict_lookup(opts, "key", "s", &temp_str) && temp_str) {
@@ -194,6 +202,8 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
 
     https_binding.pkey_path = g_strdup(temp_str);
     g_free(temp_str);
+  } else {
+    https_binding.pkey_path = TEAPOT_DEFAULT_TLS_PRIVATE_KEY_PATH;
   }
 
   if (g_variant_dict_lookup(opts, "http-port", "i", &temp_port)) {
