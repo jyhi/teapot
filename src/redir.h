@@ -36,17 +36,19 @@ void teapot_redir_302_free(void);
  *
  * @param path [in] The path to query.
  * @return NULL if there is no redirection, or a string representing the
- *         location URL. Do not free.
+ *         location URL. The caller should free the returned string when it is
+ *         no longer used.
  */
-const char *teapot_redir_301_query(const char *path);
+char *teapot_redir_301_query(const char *path);
 
 /**
  * Query whether a given path should be redirected.
  *
  * @param path [in] The path to query.
  * @return NULL if there is no redirection, or a string representing the
- *         location URL. Do not free.
+ *         location URL. The caller should free the returned string when it is
+ *         no longer used.
  */
-const char *teapot_redir_302_query(const char *path);
+char *teapot_redir_302_query(const char *path);
 
 #endif
