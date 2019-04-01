@@ -55,7 +55,7 @@ const char *teapot_redir_301_query(const char *path)
   const char *ret = NULL;
 
   if (redir_301_list)
-    ret = (const char *)g_hash_table_lookup(redir_301_list, path);
+    ret = g_hash_table_lookup(redir_301_list, path);
 
   return ret;
 }
@@ -65,7 +65,7 @@ const char *teapot_redir_302_query(const char *path)
   const char *ret = NULL;
 
   if (redir_302_list)
-    ret = (const char *)g_hash_table_lookup(redir_302_list, path);
+    ret = g_hash_table_lookup(redir_302_list, path);
 
   return ret;
 }
