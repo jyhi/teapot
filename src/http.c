@@ -184,7 +184,6 @@ static const char *http_method_to_string(enum HttpMethod method)
     // default: // <- clang thinks this is unnecessary...
       break; // Remain ret to be NULL
   }
-
   return ret;
 }
 
@@ -389,7 +388,7 @@ static struct HttpRequest teapot_http_request_parse(const char *http)
 static char *teapot_http_response_construct(const struct HttpResponse response)
 {
     size_t response_size = 0;
-    char buffer[8]; // < For store the content-length
+    char buffer[8]; // < For store the content-lengt
 
     // Calculate the buffer size to allocate
     response_size += strlen(http_status_to_string(response.status_code)) + strlen("\n");
@@ -468,8 +467,62 @@ char *teapot_http_process(size_t *size, const char *input)
 
 
     struct HttpResponse response;
-    // switch structure here
-    
+
+    // --- Predefine the connection of the response ---
+    response.connection = "close";
+    // below varible may be changed later
+    response.location = NULL;
+    response.allow = NULL;
+    // ------------------------------------------------------------
+
+    switch (request.method) {
+      case HTTP_GET:
+        // Do you want to direct to a new location? ->> 3XX response
+        // If the new location is temporart ->> HTTP 302
+        if (teapot_redir_302_query(request.path) != NULL) {
+          response.status_code = HTTP_STATUS_FOUND;
+          response.location = teapot_redir_302_query(request.path);
+        }
+
+        struct TeapotFile *file = teapot_file_read("/src/index.html", 0, TEAPOT_FILE_READ_RANGE_FULL);
+        if (file == NULL) { // If the file does not exist.
+          response.status_code = HTTP_STATUS_NOT_FOUND; ///< HTTP 404
+          response.content_type = NULL;
+          response.content_length = 0;
+          response.content = NULL;
+        } else {
+          response.status_code = HTTP_STATUS_OK; ///< HTTP 200
+          response.content_type = file -> content_type;
+          response.content_length = file -> size;
+          response.content = file -> content;
+        }
+        teapot_file_free(file);
+        break;
+      case HTTP_HEAD:
+        response.status_code = HTTP_STATUS_NO_CONTENT; ///< HTTP 204
+        response.content_type = NULL;
+        response.content_length = 0;
+        response.content = NULL;
+      case HTTP_POST:
+        if (teapot_file_write(request.content, request.content_length, request.path)) {
+          // If successfully post the content
+        } else {
+          // If fail to post the content
+        }
+        break;
+      case HTTP_DELETE:
+        // TODO
+        break;
+      case HTCPCP_BREW:
+        response.status_code = HTCPCP_STATUS_I_AM_A_TEAPOT; 
+        break;
+      case HTTP_METHOD_UNKNOWN:
+      // default:
+        response.status_code = HTTP_STATUS_METHOD_NOT_ALLOWED;    ///< HTTP 405
+        response.allow = "GET HEAD POST DELETE";
+        break;
+    }
+
     char *response_str = teapot_http_response_construct(response);
     // char *response_str = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
     *size = strlen(response_str);// < Record the length of the response string
