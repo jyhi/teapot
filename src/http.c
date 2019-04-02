@@ -295,7 +295,7 @@ static char *http_extract_header(const char *http, enum RequestHeader header)
   if (!http)
     return NULL;
 
-  char *buffer = g_malloc(BUFSIZE);
+  char *buffer = g_malloc0(BUFSIZE);
   const char *line = NULL;
 
   switch (header) {
