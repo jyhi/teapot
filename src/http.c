@@ -385,7 +385,7 @@ static struct HttpRequest teapot_http_request_parse(const char *http)
  * @param response [in] The `struct HttpResponse` to convert.
  * @return A NUL-terminated string of HTTP response.
  */
-static char *teapot_http_response_construct(const struct HttpResponse response)
+static char *teapot_http_response_construct(size_t *size, const struct HttpResponse response)
 {
     size_t response_size = 0;
     char buffer[8]; // < For store the content-lengt
@@ -416,6 +416,8 @@ static char *teapot_http_response_construct(const struct HttpResponse response)
     if (response.content) {
       response_size += response.content_length + strlen("\n");
     }
+
+    *size = response_size;
 
     char *output = g_malloc(response_size + 1);
     // NOTE: This is required for strcat() to work properly!
@@ -519,9 +521,10 @@ char *teapot_http_process(size_t *size, const char *input)
         break;
     }
 
-    char *response_str = teapot_http_response_construct(response);
-    teapot_file_free(file);
+    size_t response_size = 0;
+    char *response_str = teapot_http_response_construct(&response_size, response);
     // char *response_str = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
-    *size = strlen(response_str);// < Record the length of the response string
+    *size = response_size;
+    teapot_file_free(file);
     return response_str;
 }
