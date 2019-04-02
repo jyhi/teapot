@@ -409,12 +409,12 @@ static char *teapot_http_response_construct(size_t *size, const struct HttpRespo
       response_size += strlen("Location: ") + strlen(response.location) + strlen("\n");
     }
     if (response.allow) {
-      response_size += strlen("Allow: ") + strlen(response.allow);
+      response_size += strlen("Allow: ") + strlen(response.allow) + strlen("\n");
     }
-    response_size += strlen("\n\r\n");
+    response_size += strlen("\r\n");
 
     if (response.content) {
-      response_size += response.content_length + strlen("\n");
+      response_size += response.content_length;
     }
 
     *size = response_size;
@@ -479,7 +479,7 @@ char *teapot_http_process(size_t *size, const char *input)
     response.allow = NULL;
     response.content = NULL;
     // ------------------------------------------------------------
-    
+
     struct TeapotFile *file = teapot_file_read(request.path, 0, TEAPOT_FILE_READ_RANGE_FULL);
     switch (request.method) {
       case HTTP_GET:
@@ -512,7 +512,7 @@ char *teapot_http_process(size_t *size, const char *input)
         // TODO
         break;
       case HTCPCP_BREW:
-        response.status_code = HTCPCP_STATUS_I_AM_A_TEAPOT; 
+        response.status_code = HTCPCP_STATUS_I_AM_A_TEAPOT;
         break;
       case HTTP_METHOD_UNKNOWN:
       // default:
