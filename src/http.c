@@ -470,9 +470,12 @@ char *teapot_http_process(size_t *size, const char *input)
 
     // --- Predefine the connection of the response ---
     response.connection = "close";
-    // below varible may be changed later
+    // below variables may be changed later
+    response.content_type = NULL;
+    response.content_length = 0;
     response.location = NULL;
     response.allow = NULL;
+    response.content = NULL;
     // ------------------------------------------------------------
 
     switch (request.method) {
@@ -487,9 +490,6 @@ char *teapot_http_process(size_t *size, const char *input)
         struct TeapotFile *file = teapot_file_read("/src/index.html", 0, TEAPOT_FILE_READ_RANGE_FULL);
         if (file == NULL) { // If the file does not exist.
           response.status_code = HTTP_STATUS_NOT_FOUND; ///< HTTP 404
-          response.content_type = NULL;
-          response.content_length = 0;
-          response.content = NULL;
         } else {
           response.status_code = HTTP_STATUS_OK; ///< HTTP 200
           response.content_type = file -> content_type;
@@ -500,9 +500,6 @@ char *teapot_http_process(size_t *size, const char *input)
         break;
       case HTTP_HEAD:
         response.status_code = HTTP_STATUS_NO_CONTENT; ///< HTTP 204
-        response.content_type = NULL;
-        response.content_length = 0;
-        response.content = NULL;
       case HTTP_POST:
         if (teapot_file_write(request.content, request.content_length, request.path)) {
           // If successfully post the content
