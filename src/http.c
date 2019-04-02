@@ -478,7 +478,7 @@ char *teapot_http_process(size_t *size, const char *input)
     response.content = NULL;
     // ------------------------------------------------------------
     
-    struct TeapotFile *file = teapot_file_read("/src/index.html", 0, TEAPOT_FILE_READ_RANGE_FULL);
+    struct TeapotFile *file = teapot_file_read(request.path, 0, TEAPOT_FILE_READ_RANGE_FULL);
     switch (request.method) {
       case HTTP_GET:
         // Do you want to direct to a new location? ->> 3XX response
