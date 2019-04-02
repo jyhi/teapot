@@ -418,6 +418,7 @@ static char *teapot_http_response_construct(size_t *size, const struct HttpRespo
     }
 
     *size = response_size;
+    g_debug("Payload length %zu", response_size);
 
     char *output = g_malloc(response_size + 1);
     // NOTE: This is required for strcat() to work properly!
