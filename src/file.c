@@ -46,6 +46,14 @@ struct TeapotFile *teapot_file_read(const char *path, const size_t start, const 
   GFile *file = g_file_new_for_path(abspath);
   g_free(abspath);
 
+  // Check if the file exists (this only gives meaningful message on terminal)
+  if (!g_file_query_exists(file, NULL)) {
+    g_message("File: %s: no such file, reject", path);
+    g_clear_object(&file);
+
+    return NULL;
+  }
+
   // TODO: currently we do not support directory listing
   GFileType file_type = g_file_query_file_type(file, G_FILE_QUERY_INFO_NOFOLLOW_SYMLINKS, NULL);
   if (file_type != G_FILE_TYPE_REGULAR) {
