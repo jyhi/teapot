@@ -388,7 +388,7 @@ static struct HttpRequest teapot_http_request_parse(const char *http)
 static char *teapot_http_response_construct(size_t *size, const struct HttpResponse response)
 {
     size_t response_size = 0;
-    char buffer[8]; // < For store the content-lengt
+    char buffer[16]; // < For store the content-length
 
     // Calculate the buffer size to allocate
     response_size += strlen(http_status_to_string(response.status_code)) + strlen("\n");
@@ -398,7 +398,7 @@ static char *teapot_http_response_construct(size_t *size, const struct HttpRespo
     }
     if (response.content_length) {
       // Convert the integer content_length into string
-      snprintf(buffer, 8, "%zu", response.content_length);
+      snprintf(buffer, 16, "%zu", response.content_length);
 
       response_size += strlen("Content-Length: ") + strlen(buffer) + strlen("\n");
     }
