@@ -477,7 +477,8 @@ char *teapot_http_process(size_t *size, const char *input)
     response.allow = NULL;
     response.content = NULL;
     // ------------------------------------------------------------
-
+    
+    struct TeapotFile *file = teapot_file_read("/src/index.html", 0, TEAPOT_FILE_READ_RANGE_FULL);
     switch (request.method) {
       case HTTP_GET:
         // Do you want to direct to a new location? ->> 3XX response
@@ -487,7 +488,6 @@ char *teapot_http_process(size_t *size, const char *input)
           response.location = teapot_redir_302_query(request.path);
         }
 
-        struct TeapotFile *file = teapot_file_read("/src/index.html", 0, TEAPOT_FILE_READ_RANGE_FULL);
         if (file == NULL) { // If the file does not exist.
           response.status_code = HTTP_STATUS_NOT_FOUND; ///< HTTP 404
         } else {
@@ -496,7 +496,6 @@ char *teapot_http_process(size_t *size, const char *input)
           response.content_length = file -> size;
           response.content = file -> content;
         }
-        teapot_file_free(file);
         break;
       case HTTP_HEAD:
         response.status_code = HTTP_STATUS_NO_CONTENT; ///< HTTP 204
@@ -521,6 +520,7 @@ char *teapot_http_process(size_t *size, const char *input)
     }
 
     char *response_str = teapot_http_response_construct(response);
+    teapot_file_free(file);
     // char *response_str = "HTTP/1.1 200 OK\nContent-Type: text/plain\nContent-Length: 12\n\nHello world!";
     *size = strlen(response_str);// < Record the length of the response string
     return response_str;
