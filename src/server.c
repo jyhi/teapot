@@ -66,10 +66,13 @@ static void teapot_http_accepter(GSocketConnection *conn)
     return;
   }
 
+  gsize bytes_written = 0;
+  gboolean r = FALSE;
+
   // Write it back
-  bytes = g_output_stream_write(socket_out, buf_out, response_length, NULL, &error);
-  if (bytes < 0) {
-    g_warning("HTTP: failed to write to the client: %s", error->message);
+  r = g_output_stream_write_all(socket_out, buf_out, response_length, &bytes_written, NULL, &error);
+  if (!r) {
+    g_message("HTTP: failed to write to the client: %s, %zu bytes remaining", error->message, response_length - bytes_written);
     g_clear_error(&error);
     g_free(buf_out);
     g_free(buf_in);
@@ -79,7 +82,7 @@ static void teapot_http_accepter(GSocketConnection *conn)
     return;
   }
 
-  g_message("HTTP: written %" G_GSSIZE_FORMAT " bytes", bytes);
+  g_message("HTTP: written %" G_GSSIZE_FORMAT " bytes", bytes_written);
 
   // Free resources
   g_free(buf_out);
@@ -132,12 +135,12 @@ static void teapot_https_accepter(GSocketConnection *conn, GTlsCertificate *tls)
   GOutputStream *socket_out = g_io_stream_get_output_stream(G_IO_STREAM(conn_tls));
 
   gchar *buf_in = g_malloc(BUFSIZE);
-  gssize bytes  = 0;
+  gssize bytes_read  = 0;
 
   // Read request into memory
   // FIXME: fixed size buffer
-  bytes = g_input_stream_read(socket_in, buf_in, BUFSIZE, NULL, &error);
-  if (bytes < 0) {
+  bytes_read = g_input_stream_read(socket_in, buf_in, BUFSIZE, NULL, &error);
+  if (bytes_read < 0) {
     g_warning("HTTPS: failed to read from the client: %s", error->message);
     g_clear_error(&error);
     g_free(buf_in);
@@ -148,7 +151,7 @@ static void teapot_https_accepter(GSocketConnection *conn, GTlsCertificate *tls)
     return;
   }
 
-  g_message("HTTPS: read %" G_GSSIZE_FORMAT " bytes", bytes);
+  g_message("HTTPS: read %" G_GSSIZE_FORMAT " bytes", bytes_read);
 
   // Handle it
   size_t response_length = 0;
@@ -163,10 +166,13 @@ static void teapot_https_accepter(GSocketConnection *conn, GTlsCertificate *tls)
     return;
   }
 
+  gsize bytes_written = 0;
+  gboolean r = FALSE;
+
   // Write it back
-  bytes = g_output_stream_write(socket_out, buf_out, response_length, NULL, &error);
-  if (bytes < 0) {
-    g_warning("HTTPS: failed to write to the client: %s", error->message);
+  r = g_output_stream_write_all(socket_out, buf_out, response_length, &bytes_written, NULL, &error);
+  if (!r) {
+    g_message("HTTPS: failed to write to the client: %s, %zu bytes remaining", error->message, response_length - bytes_written);
     g_clear_error(&error);
     g_free(buf_out);
     g_free(buf_in);
@@ -177,7 +183,7 @@ static void teapot_https_accepter(GSocketConnection *conn, GTlsCertificate *tls)
     return;
   }
 
-  g_message("HTTPS: written %" G_GSSIZE_FORMAT " bytes", bytes);
+  g_message("HTTPS: written %" G_GSSIZE_FORMAT " bytes", bytes_written);
 
   // Free resources
   g_free(buf_out);
