@@ -347,7 +347,7 @@ static uint8_t *http_extract_content(const char *http)
   size_t content_length     = (size_t)toInteger(content_length_str);
 
   uint8_t *ret = g_malloc(content_length);
-  memcpy(ret, content_start, content_length);
+  memcpy(ret, content_start + strlen("\n\r\n"), content_length);
 
   g_free(content_length_str);
 
