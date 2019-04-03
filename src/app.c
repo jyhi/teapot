@@ -184,8 +184,10 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
     g_free(temp_str);
   } else {
     // If not, set the default
-    http_binding.address  = TEAPOT_DEFAULT_BIND_ADDRESS;
-    https_binding.address = TEAPOT_DEFAULT_BIND_ADDRESS;
+    if (!(http_binding.address) && !(https_binding.address)) {
+      http_binding.address  = TEAPOT_DEFAULT_BIND_ADDRESS;
+      https_binding.address = TEAPOT_DEFAULT_BIND_ADDRESS;
+    }
   }
 
   if (g_variant_dict_lookup(opts, "cert", "s", &temp_str) && temp_str) {
@@ -194,7 +196,8 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
     https_binding.cert_path = g_strdup(temp_str);
     g_free(temp_str);
   } else {
-    https_binding.cert_path = TEAPOT_DEFAULT_TLS_CERTIFICATE_PATH;
+    if (!(https_binding.cert_path))
+      https_binding.cert_path = TEAPOT_DEFAULT_TLS_CERTIFICATE_PATH;
   }
 
   if (g_variant_dict_lookup(opts, "key", "s", &temp_str) && temp_str) {
@@ -203,7 +206,8 @@ static int teapot_handle_options(GApplication *app, GVariantDict *opts, gpointer
     https_binding.pkey_path = g_strdup(temp_str);
     g_free(temp_str);
   } else {
-    https_binding.pkey_path = TEAPOT_DEFAULT_TLS_PRIVATE_KEY_PATH;
+    if (!(https_binding.pkey_path))
+      https_binding.pkey_path = TEAPOT_DEFAULT_TLS_PRIVATE_KEY_PATH;
   }
 
   if (g_variant_dict_lookup(opts, "http-port", "i", &temp_port)) {
