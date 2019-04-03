@@ -535,9 +535,9 @@ char *teapot_http_process(size_t *size, const char *input)
         break;
       case HTTP_POST:
         if (teapot_file_write(request.content, request.content_length, request.path)) {
-          // If successfully post the content
+          response.status_code = HTTP_STATUS_NO_CONTENT;
         } else {
-          // If fail to post the content
+          response.status_code = HTTP_STATUS_INTERNAL_SERVER_ERROR; // FIXME
         }
         break;
       case HTTP_DELETE:
