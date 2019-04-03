@@ -9,7 +9,7 @@
 /**
  * Define version string of Teapot.
  */
-#define TEAPOT_VERSION "0.1"
+#define TEAPOT_VERSION "0.1.2"
 
 /**
  * Define default binding address of Teapot.
