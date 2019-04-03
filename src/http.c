@@ -5,6 +5,7 @@
 #include "file.h"
 #include "redir.h"
 #include "http.h"
+#include "config.h"
 
 #define BUFSIZE 4096
 
@@ -130,6 +131,20 @@ static const char *http_header_host                 = "Host: ";
 static const char *http_header_content_type         = "Content-Type: ";
 static const char *http_header_content_length       = "Content-Length: ";
 static const char *http_header_expect               = "Expect: ";
+
+static const char *http_status_not_found_html =
+  "<!DOCTYPE html>\r\n"
+  "<html>\r\n"
+  "<head>\r\n"
+  "  <meta charset=\"utf-8\" />\r\n"
+  "  <title>404 Not Found</title>\r\n"
+  "</head>\r\n"
+  "<body style=\"text-align: center\">\r\n"
+  "  <h1>404 Not Found</h1>\r\n"
+  "  <hr />\r\n"
+  "  <p>" TEAPOT_NAME "/" TEAPOT_VERSION "</p>\r\n"
+  "</body>\r\n"
+  "</html>\r\n";
 
 /********** Private APIs **********/
 
@@ -502,6 +517,9 @@ char *teapot_http_process(size_t *size, const char *input)
 
         if (file == NULL) { // If the file does not exist.
           response.status_code = HTTP_STATUS_NOT_FOUND; ///< HTTP 404
+          response.content_type = "text/html; charset=utf8";
+          response.content_length = strlen(http_status_not_found_html);
+          response.content = http_status_not_found_html;
         } else {
           response.status_code = HTTP_STATUS_OK; ///< HTTP 200
           response.content_type = file -> content_type;
