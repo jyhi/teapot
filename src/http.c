@@ -510,7 +510,29 @@ char *teapot_http_process(size_t *size, const char *input)
         }
         break;
       case HTTP_HEAD:
-        response.status_code = HTTP_STATUS_NO_CONTENT; ///< HTTP 204
+        if (teapot_redir_301_query(request.path) != NULL) {
+          // If the new location is not temporart ->> HTTP 301
+          response.status_code = HTTP_STATUS_MOVED_PERMANENTLY;
+          response.location = teapot_redir_301_query(request.path);
+          break;
+        } else if (teapot_redir_302_query(request.path) != NULL) {
+          // If the new location is temporart ->> HTTP 302
+          response.status_code = HTTP_STATUS_FOUND;
+          response.location = teapot_redir_302_query(request.path);
+          break;
+        }
+
+        file = teapot_file_read(request.path, 0, TEAPOT_FILE_READ_RANGE_FULL);
+
+        if (file == NULL) { // If the file does not exist.
+          response.status_code = HTTP_STATUS_NOT_FOUND; ///< HTTP 404
+        } else {
+          response.status_code = HTTP_STATUS_OK; ///< HTTP 200
+          response.content_type = file -> content_type;
+          response.content_length = 0;
+          response.content = NULL;
+        }
+        break;
       case HTTP_POST:
         if (teapot_file_write(request.content, request.content_length, request.path)) {
           // If successfully post the content
