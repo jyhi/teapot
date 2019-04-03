@@ -481,7 +481,8 @@ char *teapot_http_process(size_t *size, const char *input)
     response.content = NULL;
     // ------------------------------------------------------------
 
-    struct TeapotFile *file = teapot_file_read(request.path, 0, TEAPOT_FILE_READ_RANGE_FULL);
+    struct TeapotFile *file = NULL;
+
     switch (request.method) {
       case HTTP_GET:
         // Do you want to direct to a new location? ->> 3XX response
@@ -496,6 +497,8 @@ char *teapot_http_process(size_t *size, const char *input)
           response.location = teapot_redir_302_query(request.path);
           break;
         }
+
+        file = teapot_file_read(request.path, 0, TEAPOT_FILE_READ_RANGE_FULL);
 
         if (file == NULL) { // If the file does not exist.
           response.status_code = HTTP_STATUS_NOT_FOUND; ///< HTTP 404
