@@ -485,8 +485,12 @@ char *teapot_http_process(size_t *size, const char *input)
     switch (request.method) {
       case HTTP_GET:
         // Do you want to direct to a new location? ->> 3XX response
-        // If the new location is temporart ->> HTTP 302
-        if (teapot_redir_302_query(request.path) != NULL) {
+        if (teapot_redir_301_query(request.path) != NULL) {
+          // If the new location is not temporart ->> HTTP 301
+          response.status_code = HTTP_STATUS_MOVED_PERMANENTLY;
+          response.location = teapot_redir_301_query(request.path);
+        } else if (teapot_redir_302_query(request.path) != NULL) {
+          // If the new location is temporart ->> HTTP 302
           response.status_code = HTTP_STATUS_FOUND;
           response.location = teapot_redir_302_query(request.path);
         }
