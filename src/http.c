@@ -271,6 +271,8 @@ static enum HttpMethod http_extract_request_method(const char *req)
     ret = HTTP_POST;
   else if (g_str_has_prefix(req, "DELETE"))
     ret = HTTP_DELETE;
+  else if (g_str_has_prefix(req, "BREW"))
+    ret = HTCPCP_BREW;
 
   return ret;
 }
